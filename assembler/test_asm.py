@@ -17,18 +17,23 @@ def test_read_file():
     
 # test parse data section 
 def test_parse_data_valid():
-    # test file works when passed .int, .byt, different whitespace, escaped chars, with labeled instruction
-    file = "num$ .int #30\n2_num .INt #-2  ;end of line 5%6^ \tj\nchar .byt 'h'\n\t.byt #151\n   .bYT '\n'\n\n;this is the instr section\nmain trap #0"
     asm = Assembler()
+    # test file works when passed .int, .byt, different whitespace, escaped chars, with labeled instruction
+    asm.file = "num$ .int #30\n2_Num .INt #-2  ;end of line 5%6^ \tj\nchar .byt 'h'\n\t.byt #105\n   .bYT '\n'\n\n;this is the instr section\nmain trap #0"
     ret = asm.parse_data()
+    assert asm.mem == [30, 0, 0, 0, 254, 255, 255, 255, 104, 105, 10]
     assert ret == 0
-    assert asm.mem == [30, 0, 0, 0, -2, 0, 0, 0, 150, 151, 10]
+    assert asm.labels == {"num$": 0, "2_Num": 4, "char": 8, "main": 11}
+    assert asm.cur_line == 8
 
     # test file works when passed .int, .byt, different whitespace, escaped chars, with unlabeled instruction
-    file = "num .int #30\n2num .INt #-2\nchar .byt 'h'\n\t.byt #151\n   .bYT '\n'\n   trap #0"
+    asm = Assembler()
+    asm.file = "num$ .int #30\n2_Num .INt #-2\nchar .byt 'h'\n\t.byt #105\n   .bYT '\n'\n   trap #0"
     ret = asm.parse_data()
     assert ret == 0
-    assert mem == [30, 0, 0, 0, -2, 0, 0, 0, 150, 151, 10]
+    assert asm.mem == [30, 0, 0, 0, 254, 255, 255, 255, 104, 105, 10]
+    assert asm.labels == {"num$": 0, "2_Num": 4, "char": 8}
+    assert asm.cur_line == 6
 
 
 def test_parse_data_invalid():

@@ -9,6 +9,8 @@ class Assembler:
         self.file = "" # string of assembly file
         self.bin_file_name = "" # string of file name (with .bin extension)
         self.cur_line = 0 # current line number
+        self.MAX_INT = 2147483647 # max int allowed stored in memory
+        self.MIN_INT = -2147483648
 
     # read contents of file int self.fileo
     # saves file name (with .bin extension to) self.bin_file_name
@@ -49,7 +51,6 @@ class Assembler:
             "start_line": True,
             "start_space": False,
             "comment": False,
-            "end_line": False,
             "label": False,
             "label_done": False,
             "directive": False,
@@ -60,10 +61,10 @@ class Assembler:
             "int1": False,
             "int2": False,
             "alloc_int": False,
-            "alloc_byt": False,
-            "add_int": False,
-            "add_byte_num": False,
-            "add_byte_char": False,
+            "alloc_byt_num": False,
+            "get_byt_char": False,
+            "alloc_byt_char": False,
+            "end_line": False,
             "error": False,
             "exit": False
         }
@@ -71,21 +72,23 @@ class Assembler:
 
         # read through input file a character at a time until error, eof, or instruction is encountered
         label = ""
+        value = ""
         while True:
-            self.cur_line += 1
-            s = list(states.keys())[list(states.values()).index(True)]
-            if len(file) == 0:
+            if len(self.file) == 0:
                 s = "error"
             else:
                 c = popc()
+            s = list(states.keys())[list(states.values()).index(True)]
             
             match s:
+                # at beginning of line
                 case "start_line":
+                    self.cur_line += 1
                     states[s] = False
                     if c == '\n':
                         states["start_line"] = True
                     elif re.match(r'[ \t]', c):
-                        states["start_ts"] = True
+                        states["start_space"] = True
                     elif re.match(r'[a-zA-z\d]', c):
                         states["label"] = True
                         label += c;
@@ -93,73 +96,192 @@ class Assembler:
                         states["comment"] = True
                     else:
                         states["error"] = True
+                # possible label found, save label name and memory index in self.labels
                 case "label":
                     states[s] = False
                     if re.match(r'[\w\$]', c):
                         states["label"] = True
                         label += c
                     elif re.match(r'[ \t]', c):
-                        states["label_done"]
-                        self.labels[label] = self.cur_line
+                        states["label_done"] = True
+                        self.labels[label] = len(self.mem)
                         label = ""
                     else:
                         states["error"] = True
+                # line starts with space
                 case "start_space":
-                    state[s] = False
+                    states[s] = False
                     if re.match(r'[ \t]', c):
                         states["start_space"] = True
                     elif c == '.':
                         states["directive"] = True
                     elif c == '\n':
                         states["start_line"] = True
-                    elif c = ';':
+                    elif c == ';':
                         states["comment"] = True
                     elif re.match(r'[a-zA-Z\d]', c):
                         states["exit"] = True
                         self.file = c + self.file
                     else:
                         states["error"] = True
+                # comment found
                 case "comment":
-                    state[s] = False
+                    states[s] = False
                     if c == '\n':
-                        state["start_line"] = True
+                        states["start_line"] = True
                     else:
-                        state["comment"] = True
-                case "end_line":
-                    pass
+                        states["comment"] = True
+                # label has been read and saved to self.labels
                 case "label_done":
-                    pass
+                    states[s] = False
+                    if re.match(r'[ \t]', c):
+                        states[s] = True
+                    elif re.match(r'[a-zA-Z\d]', c):
+                        states["exit"] = True
+                        self.file = c + self.file
+                    elif c == '.':
+                        states["directive"] = True
+                    else:
+                        states["error"] = True
+                # directive found
                 case "directive":
-                    pass
+                    states[s] = False
+                    if c.lower() == 'i':
+                        states["int0"] = True
+                    elif c.lower() == 'b':
+                        states["byt0"] = True
+                    else:
+                        states["error"] = True
+                # reading chars for byt directive
                 case "byt0":
-                    pass
+                    states[s] = False
+                    if c.lower() == 'y':
+                        states["byt1"] = True
+                    else:
+                        states["error"] == True
+                # reading chars for byt directive
                 case "byt1":
-                    pass
+                    states[s] = False
+                    if c.lower() == 't':
+                        states["byt2"] = True
+                    else:
+                        states["error"] = True
+                # reading chars for byt directive
                 case "byt2":
-                    pass
+                    states[s] = False
+                    if re.match(r'[ \t]', c):
+                        states["byt2"] = True
+                    elif c == '#':
+                        states["alloc_byt_num"] = True
+                    elif c == "'":
+                        states["get_byt_char"] = True
+                    else:
+                        states["error"] = True
+                # reading chars for int directive
                 case "int0":
-                    pass
+                    states[s] = False
+                    if c.lower() == 'n':
+                        states["int1"] = True
+                    else:
+                        states["error"] = True
+                # reading chars for int directive
                 case "int1":
-                    pass
+                    states[s] = False
+                    if c.lower() == 't':
+                        states["int2"] = True
+                    else:
+                        states["error"] = True
+                # reading chars for int directive
                 case "int2":
-                    pass
+                    states[s] = False
+                    if re.match(r'[ \t]', c):
+                        states["int2"] = True
+                    elif c == '#':
+                        states["alloc_int"] = True
+                    else:
+                        states["error"] = True
+                # read int value from self.file, store in self.mem as 4 bytes
                 case "alloc_int":
-                    pass
-                case "alloc_byt":
-                    pass
-                case "add_int":
-                    pass
-                case "add_byte_num":
-                    pass
-                case "add_byte_char":
-                    pass
+                    states[s] = False
+                    if re.match(r'[\d-]', c):
+                        states[s] = True
+                        value += c
+                    elif re.match(r'[\s;]', c):
+                        # add 4 byte value to self.mem
+                        if int(value) > self.MAX_INT or int(value) < self.MIN_INT:
+                            states["error"] = True
+                            continue
+                        else:
+                            b1, b2, b3, b4 = (int(value) & 0xFFFFFFFF).to_bytes(4, 'little')
+                            self.mem.extend([b1, b2, b3, b4])
+                            value = ""
+
+                        if re.match(r'[ \t]', c):
+                            states["end_line"] = True
+                        elif c == ';':
+                            states["comment"] = True
+                        else:
+                            states["start_line"] = True
+                    else:
+                        states["error"] = True
+                # read char value as numeric value from self.file, store as 1 byte number in self.mem
+                case "alloc_byt_num":
+                    states[s] = False
+                    if re.match(r'[\d]', c):
+                        states[s] = True
+                        value += c
+                    elif re.match(r'[\s;]', c):
+                        # add 1 byte value to self.mem
+                        if int(value) > 255: # max val in 1 byte
+                            states["error"] = True
+                            continue
+                        else:
+                            self.mem.append(int(value))
+                            value = ""
+
+                        if re.match(r'[ \t]', c):
+                            states["end_line"] = True
+                        elif c == ';':
+                            states["comment"] = True
+                        else:
+                            states["start_line"] = True
+                    else:
+                        states["error"] = True     
+                # get char from inside quotes
+                case "get_byt_char":
+                    states[s] = False
+                    value = c
+                    states["alloc_byt_char"] = True
+                # read char value as char from self.file, convert to int, store as 1 byte in self.mem
+                case "alloc_byt_char":
+                    states[s] = False
+                    if c == "'":
+                        states["end_line"] = True
+                        self.mem.append(ord(value))
+                        value = ""
+                    else:
+                        states["error"] = True
+                # end of line, eat ws, handle comments, move to start line after '\n'
+                case "end_line":
+                    states[s] = False
+                    if c == '\n':
+                        states["start_line"] = True
+                    elif c == ';':
+                        states["comment"] = True
+                    elif re.match(r'[ \t]', c):
+                        states[s] = True
+                    else:
+                        states["error"] = True
+                # handle any syntax errors encountered, return with value of 2
                 case "error":
-                    pass
+                    return 2
+                # possible instruction encountered, return with val of 0
                 case "exit":
                     self.file = c + self.file
                     return 0
+                # invalid state found (should not ever happen)
                 case _:
-                    raise ValueError("invalid state found")
+                    raise ValueError(f"invalid state found {s}")
 
     
     # convert instructions to bytes, store in self.mem
