@@ -52,3 +52,18 @@ def test_parse_data_valid():
 
 def test_parse_data_invalid():
     pass
+
+
+# test parse instruction section
+def test_parse_instr_valid():
+    asm = Assembler()
+    asm.file = " adD r1 R2 r3; add\n jmp Sec_2$; jump  \t\nSec_2$ divi r1 r2 #256 \n trp #3\n mov r13 r2 \n movi r14 #20\n stR r12 val"
+    asm.mem = [12]
+    asm.labels = {'val': 0, 'main': 1}
+
+    ret = asm.parse_instr()
+
+    assert ret == 0
+    assert asm.mem == [12, 18, 1, 2, 3, 0, 0, 0, 0, 1, 0, 0, 0, "Sec_2$", 0, 0, 0, 26, 1, 2, 0, 0, 1, 0, 0, 31, 0, 0, 0, 3, 0, 0, 0, 7, 13, 2, 0, 0, 0, 0, 0, 8, 14, 0, 0, 20, 0, 0, 0, 10, 12, 0, 0, "val", 0, 0, 0]
+    assert asm.labels == {'val': 0, 'main': 1, 'Sec_2$': 17}
+    

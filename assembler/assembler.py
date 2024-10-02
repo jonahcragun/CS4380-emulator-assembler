@@ -1,5 +1,6 @@
 from os.path import exists
 import re
+from enum import Enum
 
 # assembler opens a valid input file and converts assembly code to byte code writtento .bin file
 class Assembler:
@@ -46,7 +47,7 @@ class Assembler:
             c = self.file[0]
             self.file = self.file[1:]
             return c
-        
+       
         # all valid states and which is currently active
         states = {
             "start_line": True,
@@ -75,11 +76,11 @@ class Assembler:
         label = ""
         value = ""
         while True:
+            s = list(states.keys())[list(states.values()).index(True)]
             if len(self.file) == 0:
                 s = "error"
             else:
                 c = popc()
-            s = list(states.keys())[list(states.values()).index(True)]
             
             match s:
                 # at beginning of line
@@ -275,7 +276,6 @@ class Assembler:
                         states["error"] = True
                 # handle any syntax errors encountered, return with value of 2
                 case "error":
-                    self.cur_line -= 1
                     return 2
                 # possible instruction encountered, return with val of 0
                 case "exit":
@@ -288,7 +288,117 @@ class Assembler:
     
     # convert instructions to bytes, store in self.mem
     def parse_instr(self) -> int:
-        pass
+        # func pops next char from self.file
+        def popc():
+            c = self.file[0]
+            self.file = self.file[1:]
+            return c
+
+        # enum type for states
+        class State(Enum):
+            START_LINE = 0
+            START_SPACE = 1
+            COMMENT = 2
+            LABEL = 3
+            LABEL_DONE = 4
+            OPERATOR = 5
+            OPERATOR_DONE = 6
+            OPERANDS = 7
+            PROC_INSTR = 8
+            ERROR = 9
+            EXIT = 10
+
+        # enum for instrunctions
+        class Instr(Enum):
+            JMP = 1
+        
+        # loop to read chars from self.file
+        operator = ""
+        operand = ""
+        operands = []
+        label = ""
+        s = State.START_LINE
+        while True:
+            if s != State.EXIT:
+                if len(self.file) > 0:
+                    c = popc()
+                else:
+                    s = State.ERROR
+
+        match s:
+            case State.START_LINE:
+                self.cur_line += 1
+                if re.match(r'[ \t]', c):
+                    s = State.START_SPACE
+                elif c == '\n':
+                    s = State.START_LINE
+                elif c == ';':
+                    s = State.COMMENT
+                elif re.match(r'[a-zA-Z\d]', c):
+                    s = State.LABEL
+                    label += c
+                else:
+                    s = State.ERROR
+            case State.START_SPACE:
+                if re.match(r'[ \t]', c):
+                    s = State.START_SPACE
+                elif c == '\n':
+                    s = State.START_LINE
+                elif c == ';':
+                    s = State.COMMENT
+                elif re.match(r'[a-zA-Z]', c):
+                    s = State.OPERATOR
+                    operator += c.lower()
+                else:
+                    s = State.ERROR
+            case State.COMMENT:
+                if c == '/n':
+                    s = State.START_LINE
+                else:
+                    s = State.COMMENT
+            case State.LABEL:
+                if re.match(r'[\w\$]', c):
+                    s = State.LABEL
+                    label += c
+                elif re.mach(r'[ \t]', c):
+                    s = State.LABEL_DONE
+                    self.labels[label] = len(self.mem)
+                    label = ""
+                else:
+                    s = State.ERROR
+            case State.LABEL_DONE:
+                if re.match(r'[ \n]', c):
+                    s = State.LABEL_DONE
+                elif re.match(r'[a-zA-Z]', c):
+                    s = State.OPERATOR
+                    operator += c.lower()
+                else:
+                    s = State.ERROR
+            case State.OPERATOR:
+                if re.match(r'[a-zA-Z]', c):
+                    s = State.OPERATOR
+                    operator += c.lower()
+                elif re.match(r'[ \t]', c):
+                    s = State.OPERATOR_DONE
+                else:
+                    s = State.ERROR
+            case State.OPERATOR_DONE:
+                if re.match(r'[a-zA-Z]', c):
+                    s = State.OPERATOR_DONE
+                elif re.match(r'[a-zA-Z]', c):
+                    s = State.OPERANDS
+                    operands += c.lower()
+                else:
+                    s = State.ERROR
+            case State.OPERANDS:
+                pass
+            case State.PROC_INSTR:
+                pass
+            case State.ERROR:
+                return 2
+            case State.EXIT:
+                return 0
+
 
     # replace labels in self.mem with addr from self.labels
     def second_pass(self) -> int:
