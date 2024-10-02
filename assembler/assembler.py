@@ -304,7 +304,7 @@ class Assembler:
             OPERATOR = 5
             OPERATOR_DONE = 6
             OPERANDS = 7
-            PROC_INSTR = 8
+            OPERANDS_CONSUME = 8
             ERROR = 9
             EXIT = 10
 
@@ -323,7 +323,10 @@ class Assembler:
                 if len(self.file) > 0:
                     c = popc()
                 else:
-                    s = State.ERROR
+                    if s == State.START_LINE:
+                        s = State.EXIT
+                    else:
+                        s = State.ERROR
 
         match s:
             case State.START_LINE:
@@ -352,7 +355,9 @@ class Assembler:
                 else:
                     s = State.ERROR
             case State.COMMENT:
-                if c == '/n':
+                if len(self.file) == 0:
+                    s = State.EXIT
+                elif c == '/n':
                     s = State.START_LINE
                 else:
                     s = State.COMMENT
@@ -385,15 +390,48 @@ class Assembler:
             case State.OPERATOR_DONE:
                 if re.match(r'[a-zA-Z]', c):
                     s = State.OPERATOR_DONE
-                elif re.match(r'[a-zA-Z]', c):
+                elif re.match(r'[#a-zA-Z\d]', c):
                     s = State.OPERANDS
-                    operands += c.lower()
+                    operand += c.lower()
                 else:
                     s = State.ERROR
             case State.OPERANDS:
-                pass
-            case State.PROC_INSTR:
-                pass
+                # end of line, validate instruction
+                if re.match(r'[\n;]', c) or (len(self.file) == 0 and re.match(r'[#\$\w]', c)):
+                    if len(self.file) == 0:
+                        s = State.EXIT
+                    elif c == ';':
+                        s = State.COMMENT
+                    elif c == '\n':
+                        s = State.START_LINE
+
+                    if re.match(r'[#\$\w]', c):
+                        operand += c.lower()
+                    operands.append(operand)
+                    operand = ""
+                    
+                    # ********** continue here ***********
+
+                elif re.match(r'[#\$\w]', c):
+                    s = s
+                    operand += c.lower()
+                elif re.match(r'[ \t]', c):
+                    s = State.OPERANDS_CONSUME
+                    operands.append(operand)
+                    operand = ""
+                else:
+                    s = State.ERROR
+            case State.OPERANDS_CONSUME:
+                if len(self.file) == 0:
+                    self.file = '\n' + self.file
+                    s = State.OPERANDS
+                if re.match(r'[ \t]', c):
+                    s = s
+                elif re.match(r'[\n;]', c):
+                    self.file = c + self.file
+                    s = State.OPERANDS
+                else:
+                    s = State.ERROR
             case State.ERROR:
                 return 2
             case State.EXIT:
