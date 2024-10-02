@@ -14,6 +14,20 @@ def test_read_file():
 
     ret = asm.read_file("fake_test.asm")
     assert ret == 1
+
+# test file writes binary correctly
+def test_write_bin():
+    asm = Assembler()
+    asm.bin_file_name = "tests/test.bin"
+    asm.mem = [30, 0, 0, 0, 254, 255, 255, 255, 104, 105, 10]
+    ret = asm.write_bin()
+
+    with open("tests/test.bin", 'rb') as f:
+        b = f.read()
+
+    assert list(b) == [30, 0, 0, 0, 254, 255, 255, 255, 104, 105, 10]
+
+
     
 # test parse data section 
 def test_parse_data_valid():

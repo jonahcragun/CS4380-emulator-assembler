@@ -34,7 +34,8 @@ class Assembler:
 
     # write contents of self.mem to <self.file_name>.bin
     def write_bin(self) -> int:
-        pass
+        with open(self.bin_file_name, 'wb') as f:
+            f.write(bytearray(self.mem))
 
     # convert data section to bytes, store in self.mem
     # return 2 if invalid line is encountered (or eof)
@@ -274,6 +275,7 @@ class Assembler:
                         states["error"] = True
                 # handle any syntax errors encountered, return with value of 2
                 case "error":
+                    self.cur_line -= 1
                     return 2
                 # possible instruction encountered, return with val of 0
                 case "exit":
