@@ -1,3 +1,3 @@
 num .int #30
 
-main trap #0
+main trp #0

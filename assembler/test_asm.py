@@ -9,7 +9,7 @@ def test_read_file():
 
     ret = asm.read_file("tests/test.asm")
     assert ret == 0
-    assert asm.file ==  "num .int #30\n\nmain trap #0\n"
+    assert asm.file ==  "num .int #30\n\nmain trp #0\n"
     assert asm.bin_file_name == "tests/test.bin"
 
     ret = asm.read_file("fake_test.asm")
@@ -37,7 +37,7 @@ def test_parse_data_valid():
     ret = asm.parse_data()
     assert asm.mem == [30, 0, 0, 0, 254, 255, 255, 255, 104, 105, 10]
     assert ret == 0
-    assert asm.labels == {"num$": 0, "2_Num": 4, "char": 8, "main": 11}
+    assert asm.labels == {"num$": 0, "2_Num": 4, "char": 8}
     assert asm.cur_line == 8
 
     # test file works when passed .int, .byt, different whitespace, escaped chars, with unlabeled instruction
@@ -57,7 +57,7 @@ def test_parse_data_invalid():
 # test parse instruction section
 def test_parse_instr_valid():
     asm = Assembler()
-    asm.file = " adD r1 R2 r3; add\n jmp Sec_2$; jump  \t\nSec_2$ divi r1 r2 #256 \n trp #3\n mov r13 r2 \n movi r14 #20\n stR r12 val"
+    asm.file = " adD r1, R2, r3 ; add\n jmp Sec_2$ ; jump  \t\nSec_2$ divi r1, r2, #256 \n trp #3\n mov r13, r2 \n movi r14, #20\n stR r12, val"
     asm.mem = [12]
     asm.labels = {'val': 0, 'main': 1}
 
@@ -67,3 +67,13 @@ def test_parse_instr_valid():
     assert asm.mem == [12, 18, 1, 2, 3, 0, 0, 0, 0, 1, 0, 0, 0, "Sec_2$", 0, 0, 0, 26, 1, 2, 0, 0, 1, 0, 0, 31, 0, 0, 0, 3, 0, 0, 0, 7, 13, 2, 0, 0, 0, 0, 0, 8, 14, 0, 0, 20, 0, 0, 0, 10, 12, 0, 0, "val", 0, 0, 0]
     assert asm.labels == {'val': 0, 'main': 1, 'Sec_2$': 17}
     
+
+# test second pass
+def test_second_pass():
+    asm = Assembler()
+    asm.labels = {'val': 0, 'main': 1}
+    asm.mem = [12, 1, 0, 0, 0, 'main', 0, 0, 0, 9, 0, 0, 0, 'val', 0, 0, 0]
+
+    ret = asm.second_pass()
+    assert asm.mem == [12, 1, 0, 0, 0, 1, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0]
+    assert ret == 0
