@@ -9,3 +9,4 @@ main ldr r0, val1
     add r0, r0, r1
 	mov r3, r0
     trp #3
+    trp #0

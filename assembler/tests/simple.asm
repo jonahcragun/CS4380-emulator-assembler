@@ -15,9 +15,9 @@ MAIN ldr 	r0, Everything 		;42 into r0
 	trp 	#3 			;space to stdout
 	mov 	r3, r1 			;0 into r3
 	trp 	#1 			;0 to stdout
-	movi 	r3, #32 		;space into r3
+	movi 	r3, ' ' 		;space into r3
 	trp 	#3 			;space to stdout
-	movi 	r3, #45 		;'=' into r3
+	movi 	r3, '=' 		;'=' into r3
 	trp 	#3 			;'=' to stdout
 	movi 	r3, #32 		;space into r3
 	trp 	#3 			;space to stdout

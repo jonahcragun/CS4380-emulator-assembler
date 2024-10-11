@@ -5,7 +5,7 @@ from enum import Enum
 # assembler opens a valid input file and converts assembly code to byte code writtento .bin file
 class Assembler:
     def __init__(self):
-        self.mem = [] # list of prog memory
+        self.mem = [0, 0, 0, 0] # list of prog memory
         self.labels = {} # dict of labels associated with line numbers
         self.file = "" # string of assembly file
         self.bin_file_name = "" # string of file name (with .bin extension)
@@ -124,6 +124,11 @@ class Assembler:
                     elif re.match(r'[a-zA-Z\d]', c):
                         states["exit"] = True
                         self.file = " " + c + self.file
+                        b1, b2, b3, b4 = (len(self.mem) & 0xFFFFFFFF).to_bytes(4, 'little')
+                        self.mem[0] = b1
+                        self.mem[1] = b2
+                        self.mem[2] = b3
+                        self.mem[3] = b4
                     else:
                         states["error"] = True
                 # comment found
@@ -141,6 +146,11 @@ class Assembler:
                     elif re.match(r'[a-zA-Z]', c):
                         states["exit"] = True
                         self.file = label + ' ' + c + self.file
+                        b1, b2, b3, b4 = (len(self.mem) & 0xFFFFFFFF).to_bytes(4, 'little')
+                        self.mem[0] = b1
+                        self.mem[1] = b2
+                        self.mem[2] = b3
+                        self.mem[3] = b4
                     elif c == '.':
                         states["directive"] = True
                         self.labels[label] = len(self.mem)
@@ -329,6 +339,8 @@ class Assembler:
             TRP = 29
             ERROR = 30
             EXIT = 31
+            MOVI_OP2_CHAR_DONE = 32
+            MOVI_OP2_CHAR = 33
 
         # enum for instrunctions
         class Instr(Enum):
@@ -490,8 +502,19 @@ class Assembler:
                         s = State.MOVI_DONE
                     elif c == '#':
                         s = State.MOVI_OP2
+                    elif c == "'":
+                        s = State.MOVI_OP2_CHAR
                     else:
                         s = State.ERROR
+                case State.MOVI_OP2_CHAR:
+                    operand += c
+                    s = State.MOVI_OP2_CHAR_DONE
+                case State.MOVI_OP2_CHAR_DONE:
+                    if c == "'":
+                        s = State.ENDL
+                        self.mem.extend([0, 0, ord(operand), 0, 0, 0])
+                        operand = ""
+
                 case State.MOVI_OP2:
                     if re.match(r'[\d]', c):
                         s = State.MOVI_OP2
