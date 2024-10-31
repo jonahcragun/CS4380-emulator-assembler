@@ -25,7 +25,7 @@ enum CntrlRegNames {OPERATION=0, OPERAND_1, OPERAND_2, OPERAND_3, IMMEDIATE};
 enum DataRegNames {REG_VAL_1=0, REG_VAL_2};
 
 // instructions 
-enum Instructions {JMP=1, MOV=7, MOVI, LDA, STR, LDR, STB, LDB, ADD=18, ADDI, SUB, SUBI, MUL, MULI, DIV, SDIV, DIVI, TRP=31};
+enum Instructions {JMP=1, JMR, BNZ, BGT, BLT, BRZ, MOV=7, MOVI, LDA, STR, LDR, STB, LDB, ISTR, ILDR, ISTB, ILDB, ADD=18, ADDI, SUB, SUBI, MUL, MULI, DIV, SDIV, DIVI, CMP=29, CMPI, TRP=31};
 enum Traps {HALT=0, WINT, RINT, WCHAR, RCHAR, PREGS=98};
 
 // execution
