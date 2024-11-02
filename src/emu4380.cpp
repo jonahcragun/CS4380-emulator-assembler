@@ -150,59 +150,51 @@ bool decode() {
             if (cntrl_regs[IMMEDIATE] > RCHAR && cntrl_regs[IMMEDIATE] != PREGS) return false;
             break;
         case(ISTR):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1 || cntrl_regs[OPERAND_2] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
-            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]]
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]];
             break;
         case(ILDR):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1 || cntrl_regs[OPERAND_2] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
-            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]]
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]]; 
             break;
         case(ISTB):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1 || cntrl_regs[OPERAND_2] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
-            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]]
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]];
             break;
         case(ILDB):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1 || cntrl_regs[OPERAND_2] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
-            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]]
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]]; 
             break;
         case(JMR):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
             break;
         case(BNZ):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
-            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]] 
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
             break;
         case(BGT):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
-            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]] 
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
             break;
         case(BLT):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
-            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]] 
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
             break;
         case(BRZ):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
-            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]] 
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
             break;
         case(CMP):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1 || cntrl_regs[OPERAND_2] > num_regs - 1 cntrl_regs[OPERAND_3] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
-            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]] 
-            data_regs[REG_VAL_3] = reg_file[cntrl_regs[OPERAND_3]] 
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]]; 
+            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]]; 
             break;
         case(CMPI):
-            if (cntrl_regs[OPERAND_1] > num_regs - 1 || cntrl_regs[OPERAND_2] > num_regs - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]] 
-            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]] 
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]]; 
             break;
         default:
             // invalid instruction
