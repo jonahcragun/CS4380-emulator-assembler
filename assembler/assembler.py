@@ -341,10 +341,16 @@ class Assembler:
             EXIT = 31
             MOVI_OP2_CHAR_DONE = 32
             MOVI_OP2_CHAR = 33
+            JMR = 34
 
         # enum for instrunctions
         class Instr(Enum):
             JMP = 1
+            JMR = 2
+            BNZ = 3
+            BGT = 4
+            BLT = 5
+            BRZ = 6
             MOV = 7
             MOVI = 8
             LDA = 9
@@ -352,6 +358,10 @@ class Assembler:
             LDR = 11
             STB = 12
             LDB = 13
+            ISTR = 14
+            ILDR = 15
+            ISTB = 16
+            ILDB = 17
             ADD = 18
             ADDI = 19
             SUB = 20
@@ -361,6 +371,8 @@ class Assembler:
             DIV = 24
             SDIV = 25
             DIVI = 26
+            CMP = 29
+            CMPI = 30
             TRP = 31
 
         class Regs(Enum):
@@ -468,24 +480,37 @@ class Assembler:
     
                         if operator == Instr.JMP.name and re.match(r'[a-zA-Z\d]', c):
                             s = State.JMP
-                        elif operator == Instr.MOV.name and c.upper() == 'R':
+                        elif operator in [Instr.MOV.name, Instr.ISTR.name, Instr.ILDR.name, Instr.ISTB.name, Instr.ILDB.name] and c.upper() == 'R':
                             s = State.MOV
-                        elif operator == Instr.MOVI.name and c.upper() == 'R':
+                        elif operator in [Instr.MOVI.name] and c.upper() == 'R':
                             s = State.MOVI
-                        elif operator in [Instr.LDA.name, Instr.STR.name, Instr.LDR.name, Instr.STB.name, Instr.LDB.name] and c.upper() == 'R':
+                        elif operator in [Instr.LDA.name, Instr.STR.name, Instr.LDR.name, Instr.STB.name, Instr.LDB.name, Instr.BNZ.name, Instr.BGT.name, Instr.BLT.name, Instr.BRZ.name] and c.upper() == 'R':
                             s = State.LD_ST
-                        elif operator in [Instr.ADD.name, Instr.SUB.name, Instr.MUL.name, Instr.DIV.name, Instr.SDIV.name] and c.upper() == 'R':
+                        elif operator in [Instr.ADD.name, Instr.SUB.name, Instr.MUL.name, Instr.DIV.name, Instr.SDIV.name, Instr.CMP.name] and c.upper() == 'R':
                             s = State.ARITHMETIC
-                        elif operator in [Instr.ADDI.name, Instr.SUBI.name, Instr.MULI.name, Instr.DIVI.name] and c.upper() == 'R':
+                        elif operator in [Instr.ADDI.name, Instr.SUBI.name, Instr.MULI.name, Instr.DIVI.name, Instr.CMPI.name] and c.upper() == 'R':
                             s = State.ARITHMETIC_IMM
                         elif operator == Instr.TRP.name and c == '#':
                             s = State.TRP
                             operand = ""
+                        elif operator == Instr.JMR.name and c == 'R':
+                            s = State.JMR
                         else:
                             s = State.ERROR
                         operator = ""
                     else:
                         s = State.ERROR
+
+                case State.JMR:
+                    if re.match(r'[\d]', c):
+                        s = State.JMR
+                        operand += c
+                    elif re.match(r'[ \t]', c) and operand in [r.name for r in Regs]:
+                        s = State.ENDL
+                        self.mem.append(Regs[operand].value)
+                        operand = ""
+                    else:
+                        s = state.ERROR
     
                 case State.MOVI:
                     if re.match(r'[\d]', c):

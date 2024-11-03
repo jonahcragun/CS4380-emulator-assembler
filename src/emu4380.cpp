@@ -294,6 +294,48 @@ bool execute() {
                     return false;
             }
             break;
+        case(JMR):
+            reg_file[PC] = data_regs[REG_VAL_1];
+        case(BNZ):
+            if (data_regs[REG_VAL_1] != 0)
+                reg_file[PC] = cntrl_regs[IMMEDIATE];
+        case(BGT):
+            if (data_regs[REG_VAL_1] > 0)
+                reg_file[PC] = cntrl_regs[IMMEDIATE];
+        case(BLT):
+            if (data_regs[REG_VAL_1] < 0)
+                reg_file[PC] = cntrl_regs[IMMEDIATE];
+        case(BRZ):
+            if (data_regs[REG_VAL_1] == 0)
+                reg_file[PC] = cntrl_regs[IMMEDIATE];
+        case(ISTR):
+            prog_mem[data_regs[REG_VAL_2]] = data_regs[REG_VAL_1];
+        case(ILDR):
+            reg_file[data_regs[REG_VAL_1]] = prog_mem[data_regs[REG_VAL_2]];
+        case(ISTB):
+            prog_mem[data_regs[REG_VAL_2]] = data_regs[REG_VAL_1];
+        case(ILDB):
+            reg_file[data_regs[REG_VAL_1]] = prog_mem[data_regs[REG_VAL_2]];
+        case(CMP):
+            if (data_regs[REG_VAL_1] == data_regs[REG_VAL_2]) {
+                reg_file[cntrl_regs[OPERAND_1]] = 0;
+            }
+            else if (data_regs[REG_VAL_1] > data_regs[REG_VAL_2]) {
+                reg_file[cntrl_regs[OPERAND_1]] = 1;
+            }
+            else {
+                reg_file[cntrl_regs[OPERAND_1]] = -1;
+            }
+        case(CMPI):
+            if (data_regs[REG_VAL_1] = cntrl_regs[IMMEDIATE]) {
+                reg_file[cntrl_regs[OPERAND_1]] = 0;
+            }
+            else if (data_regs[REG_VAL_1] > cntrl_regs[IMMEDIATE]) {
+                reg_file[cntrl_regs[OPERAND_1]] = 1;
+            }
+            else {
+                reg_file[cntrl_regs[OPERAND_1]] = -1;
+            }
         default:
             // invalid instruction
             return false;

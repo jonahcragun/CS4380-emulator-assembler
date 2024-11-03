@@ -4,7 +4,7 @@ import pytest
 # test file is read correctly
 def test_read_file():
     asm = Assembler()
-    ret = asm.read_file("test/test.txt")
+    ret = asm.read_file("tests/test.txt")
     assert ret == 1
 
     ret = asm.read_file("tests/test.asm")
