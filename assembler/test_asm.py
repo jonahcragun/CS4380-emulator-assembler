@@ -77,3 +77,99 @@ def test_second_pass():
     ret = asm.second_pass()
     assert asm.mem == [12, 1, 0, 0, 0, 1, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0]
     assert ret == 0
+
+
+# test new instructions (from part 3)
+def test_JMR():
+    asm = Assembler()
+    asm.file = " JMR r1 ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0]
+
+
+def test_BNZ():
+    asm = Assembler()
+    asm.file = " BNZ r1, val ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    asm.labels = {'val': 2}
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 3, 1, 0, 0, "val", 0, 0, 0]
+   
+
+def test_BGT():
+    asm = Assembler()
+    asm.file = " BGT r1, val ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    asm.labels = {'val': 2}
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 4, 1, 0, 0, "val", 0, 0, 0]
+   
+
+def test_BLT():
+    asm = Assembler()
+    asm.file = " BLT r1, val ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    asm.labels = {'val': 2}
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 5, 1, 0, 0, "val", 0, 0, 0]
+   
+
+def test_BRZ():
+    asm = Assembler()
+    asm.file = " BRZ r1, val ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    asm.labels = {'val': 2}
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 6, 1, 0, 0, "val", 0, 0, 0]
+   
+
+def test_ISTR():
+    asm = Assembler()
+    asm.file = " ISTR r1, r2 ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 14, 1, 2, 0, 0, 0, 0, 0]
+   
+
+def test_ILDR():
+    asm = Assembler()
+    asm.file = " ILDR r1, r2 ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 15, 1, 2, 0, 0, 0, 0, 0]
+   
+
+def test_ISTB():
+    asm = Assembler()
+    asm.file = " ISTB r1, r2 ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 16, 1, 2, 0, 0, 0, 0, 0]
+   
+
+def test_ILDB():
+    asm = Assembler()
+    asm.file = " ILDB r1, r2 ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 17, 1, 2, 0, 0, 0, 0, 0]
+   
+
+def test_CMP():
+    asm = Assembler()
+    asm.file = " CMP r1, r2, r3 ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 29, 1, 2, 3, 0, 0, 0, 0]
+   
+
+def test_CMPI():
+    asm = Assembler()
+    asm.file = " CMPI r1, r2, #50 ; jmp to value in r1\n"
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 30, 1, 2, 0, 50, 0, 0, 0]
+   
+
+

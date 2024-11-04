@@ -493,7 +493,7 @@ class Assembler:
                         elif operator == Instr.TRP.name and c == '#':
                             s = State.TRP
                             operand = ""
-                        elif operator == Instr.JMR.name and c == 'R':
+                        elif operator == Instr.JMR.name and c.upper() == 'R':
                             s = State.JMR
                         else:
                             s = State.ERROR
@@ -505,9 +505,9 @@ class Assembler:
                     if re.match(r'[\d]', c):
                         s = State.JMR
                         operand += c
-                    elif re.match(r'[ \t]', c) and operand in [r.name for r in Regs]:
+                    elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
                         s = State.ENDL
-                        self.mem.append(Regs[operand].value)
+                        self.mem.extend([Regs[operand].value, 0, 0, 0, 0, 0, 0])
                         operand = ""
                     else:
                         s = state.ERROR
