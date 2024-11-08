@@ -82,10 +82,24 @@ def test_second_pass():
 # test new instructions (from part 3)
 def test_JMR():
     asm = Assembler()
-    asm.file = " JMR r1 ; jmp to value in r1\n"
+    asm.file = " JmR r1 ; jmp to value in r1\n"
     ret = asm.parse_instr()
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0]
+
+    # error handling
+    asm.file = " JmR 2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " jmr r1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " JMR #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' JMR "hi"'
+    ret = asm.parse_instr()
+    assert ret == 2;
 
 
 def test_BNZ():
@@ -96,6 +110,20 @@ def test_BNZ():
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 3, 1, 0, 0, "val", 0, 0, 0]
    
+    # error handling
+    asm.file = " BNZ r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " BNZ t1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " BNZ #6, #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' BNZ r1, "hi"'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
 
 def test_BGT():
     asm = Assembler()
@@ -105,6 +133,20 @@ def test_BGT():
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 4, 1, 0, 0, "val", 0, 0, 0]
    
+    # error handling
+    asm.file = " BGT r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " BGT t1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " BGT #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' BGT r1, "hi"'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
 
 def test_BLT():
     asm = Assembler()
@@ -114,6 +156,20 @@ def test_BLT():
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 5, 1, 0, 0, "val", 0, 0, 0]
    
+    # error handling
+    asm.file = " BLT r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " BLT t1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " BLT #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' BLT r1, "hi"'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
 
 def test_BRZ():
     asm = Assembler()
@@ -123,6 +179,20 @@ def test_BRZ():
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 6, 1, 0, 0, "val", 0, 0, 0]
    
+    # error handling
+    asm.file = " BRZ r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " BRZ t1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " BRZ #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' BRZ r1, "hi"'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
 
 def test_ISTR():
     asm = Assembler()
@@ -131,6 +201,20 @@ def test_ISTR():
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 14, 1, 2, 0, 0, 0, 0, 0]
    
+    # error handling
+    asm.file = " ISTR r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " ISTR r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " ISTR #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' ISTR "hi", r2'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
 
 def test_ILDR():
     asm = Assembler()
@@ -139,6 +223,20 @@ def test_ILDR():
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 15, 1, 2, 0, 0, 0, 0, 0]
    
+    # error handling
+    asm.file = " ILDR r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " ILDR r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " ILDR #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' ILDR "hi", r2'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
 
 def test_ISTB():
     asm = Assembler()
@@ -147,6 +245,20 @@ def test_ISTB():
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 16, 1, 2, 0, 0, 0, 0, 0]
    
+    # error handling
+    asm.file = " ISTB r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " ISTB r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " ISTB #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' ISTB "hi", r2'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
 
 def test_ILDB():
     asm = Assembler()
@@ -155,6 +267,20 @@ def test_ILDB():
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 17, 1, 2, 0, 0, 0, 0, 0]
    
+    # error handling
+    asm.file = " ILDB r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " ILDB r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " ILDB #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' ILDB "hi", r2'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
 
 def test_CMP():
     asm = Assembler()
@@ -163,6 +289,20 @@ def test_CMP():
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 29, 1, 2, 3, 0, 0, 0, 0]
    
+    # error handling
+    asm.file = " CMP 2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " CMP r1, R2, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " CMP 2, r1, r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' CMP "hi", r1, r2'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
 
 def test_CMPI():
     asm = Assembler()
@@ -171,5 +311,19 @@ def test_CMPI():
     assert ret == 0;
     assert asm.mem == [0, 0, 0, 0, 30, 1, 2, 0, 50, 0, 0, 0]
    
+    # error handling
+    asm.file = " CMPI 2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " CMPI r1, R2, r3"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " CMPI #6, r1, r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' CMPI r1, r2, "hi"'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
 
 

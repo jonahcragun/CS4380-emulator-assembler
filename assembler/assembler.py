@@ -494,6 +494,7 @@ class Assembler:
                             s = State.TRP
                             operand = ""
                         elif operator == Instr.JMR.name and c.upper() == 'R':
+                            print(c, self.file)
                             s = State.JMR
                         else:
                             s = State.ERROR
@@ -510,7 +511,7 @@ class Assembler:
                         self.mem.extend([Regs[operand].value, 0, 0, 0, 0, 0, 0])
                         operand = ""
                     else:
-                        s = state.ERROR
+                        s = State.ERROR
     
                 case State.MOVI:
                     if re.match(r'[\d]', c):

@@ -17,6 +17,9 @@ unsigned int cntrl_regs[NUM_CNTRL_REGS] = {0};
 unsigned int data_regs[NUM_DATA_REGS] = {0};
 bool running = true;
 
+// define cache measurement vars
+unsigned int mem_cycle_cntr = 0;
+
 // ****************
 // inititialization
 // ****************
@@ -296,46 +299,57 @@ bool execute() {
             break;
         case(JMR):
             reg_file[PC] = data_regs[REG_VAL_1];
+            break;
         case(BNZ):
-            if (data_regs[REG_VAL_1] != 0)
+            if (static_cast<int>(data_regs[REG_VAL_1]) != 0)
                 reg_file[PC] = cntrl_regs[IMMEDIATE];
+            break;
         case(BGT):
-            if (data_regs[REG_VAL_1] > 0)
+            if (static_cast<int>(data_regs[REG_VAL_1]) > 0)
                 reg_file[PC] = cntrl_regs[IMMEDIATE];
+            break;
         case(BLT):
-            if (data_regs[REG_VAL_1] < 0)
+            if (static_cast<int>(data_regs[REG_VAL_1]) < 0)
                 reg_file[PC] = cntrl_regs[IMMEDIATE];
+            break;
         case(BRZ):
-            if (data_regs[REG_VAL_1] == 0)
+            if (static_cast<int>(data_regs[REG_VAL_1]) == 0)
                 reg_file[PC] = cntrl_regs[IMMEDIATE];
+            break;
         case(ISTR):
-            prog_mem[data_regs[REG_VAL_2]] = data_regs[REG_VAL_1];
+            *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_2]) = data_regs[REG_VAL_1];
+            break;
         case(ILDR):
-            reg_file[data_regs[REG_VAL_1]] = prog_mem[data_regs[REG_VAL_2]];
+            reg_file[data_regs[REG_VAL_1]] = *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_2]);
+            break;
         case(ISTB):
             prog_mem[data_regs[REG_VAL_2]] = data_regs[REG_VAL_1];
+            break;
         case(ILDB):
             reg_file[data_regs[REG_VAL_1]] = prog_mem[data_regs[REG_VAL_2]];
+            break;
         case(CMP):
-            if (data_regs[REG_VAL_1] == data_regs[REG_VAL_2]) {
+            if (static_cast<int>(data_regs[REG_VAL_1]) == static_cast<int>(data_regs[REG_VAL_2])) {
                 reg_file[cntrl_regs[OPERAND_1]] = 0;
             }
-            else if (data_regs[REG_VAL_1] > data_regs[REG_VAL_2]) {
+            else if (static_cast<int>(data_regs[REG_VAL_1]) > static_cast<int>(data_regs[REG_VAL_2])) {
                 reg_file[cntrl_regs[OPERAND_1]] = 1;
             }
             else {
                 reg_file[cntrl_regs[OPERAND_1]] = -1;
             }
+            break;
         case(CMPI):
-            if (data_regs[REG_VAL_1] = cntrl_regs[IMMEDIATE]) {
+            if (static_cast<int>(data_regs[REG_VAL_1]) == static_cast<int>(cntrl_regs[IMMEDIATE])) {
                 reg_file[cntrl_regs[OPERAND_1]] = 0;
             }
-            else if (data_regs[REG_VAL_1] > cntrl_regs[IMMEDIATE]) {
+            else if (static_cast<int>(data_regs[REG_VAL_1]) > static_cast<int>(cntrl_regs[IMMEDIATE])) {
                 reg_file[cntrl_regs[OPERAND_1]] = 1;
             }
             else {
                 reg_file[cntrl_regs[OPERAND_1]] = -1;
             }
+            break;
         default:
             // invalid instruction
             return false;

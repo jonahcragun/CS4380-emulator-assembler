@@ -271,6 +271,524 @@ TEST(execute, illegalSTR) {
     EXPECT_EQ(0,0);
 }
 
+// Test JMR
+TEST(JMR, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = JMR;
+    cntrl_regs[OPERAND_1] = R1;
+    reg_file[PC] = 0;
+    reg_file[R1] = 5;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 5);
+
+    // expect fail
+    cntrl_regs[OPERAND_1] = 22;
+    ret = decode();
+    EXPECT_EQ(ret, false);
+    
+    
+    delete_mem();
+}
+
+TEST(JMR, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    reg_file[PC] = *reinterpret_cast<unsigned int*>(prog_mem);
+    cntrl_regs[OPERATION] = JMR;
+    data_regs[REG_VAL_1] = 5;
+    bool ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 5);
+
+    delete_mem();
+}
+
+
+// Test BNZ
+TEST(BNZ, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = BNZ;
+    cntrl_regs[OPERAND_1] = R1;
+    cntrl_regs[IMMEDIATE] = 10;
+    reg_file[PC] = 0;
+    reg_file[R1] = 5;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 5);
+    EXPECT_EQ(cntrl_regs[IMMEDIATE], 10);
+
+    // expect fail
+    cntrl_regs[OPERAND_1] = 22;
+    ret = decode();
+    EXPECT_EQ(ret, false);
+    
+    delete_mem();
+
+}
+
+TEST(BNZ, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    reg_file[PC] = 0;
+    cntrl_regs[OPERATION] = BNZ;
+    data_regs[REG_VAL_1] = 5;
+    cntrl_regs[IMMEDIATE] = 10;
+    bool ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 10);
+
+    cntrl_regs[OPERATION] = BNZ;
+    reg_file[PC] = 0;
+    data_regs[REG_VAL_1] = 0;
+    cntrl_regs[IMMEDIATE] = 10;
+    ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 0);
+
+
+    cntrl_regs[OPERATION] = BNZ;
+    reg_file[PC] = 0;
+    data_regs[REG_VAL_1] = -1;
+    cntrl_regs[IMMEDIATE] = 10;
+    ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 10);
+
+    delete_mem();
+
+}
+
+// Test BGT
+TEST(BGT, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = BGT;
+    cntrl_regs[OPERAND_1] = R1;
+    cntrl_regs[IMMEDIATE] = 10;
+    reg_file[PC] = 0;
+    reg_file[R1] = 5;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 5);
+    EXPECT_EQ(cntrl_regs[IMMEDIATE], 10);
+
+    // expect fail
+    cntrl_regs[OPERAND_1] = 22;
+    ret = decode();
+    EXPECT_EQ(ret, false);
+    
+    
+    delete_mem();
+
+}
+
+TEST(BGT, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    reg_file[PC] = 0;
+    cntrl_regs[OPERATION] = BGT;
+    data_regs[REG_VAL_1] = 5;
+    cntrl_regs[IMMEDIATE] = 10;
+    bool ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 10);
+
+    cntrl_regs[OPERATION] = BGT;
+    reg_file[PC] = 0;
+    data_regs[REG_VAL_1] = 0;
+    cntrl_regs[IMMEDIATE] = 10;
+    ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 0);
+
+
+    cntrl_regs[OPERATION] = BGT;
+    reg_file[PC] = 0;
+    data_regs[REG_VAL_1] = -1;
+    cntrl_regs[IMMEDIATE] = 10;
+    ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 0);
+
+    delete_mem();
+
+}
+
+// Test BLT
+TEST(BLT, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = BLT;
+    cntrl_regs[OPERAND_1] = R1;
+    cntrl_regs[IMMEDIATE] = 10;
+    reg_file[PC] = 0;
+    reg_file[R1] = 5;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 5);
+    EXPECT_EQ(cntrl_regs[IMMEDIATE], 10);
+
+    // expect fail
+    cntrl_regs[OPERAND_1] = 22;
+    ret = decode();
+    EXPECT_EQ(ret, false);
+    
+    
+    delete_mem();
+
+}
+
+TEST(BLT, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    reg_file[PC] = 0;
+    cntrl_regs[OPERATION] = BLT;
+    data_regs[REG_VAL_1] = 5;
+    cntrl_regs[IMMEDIATE] = 10;
+    bool ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 0);
+
+    cntrl_regs[OPERATION] = BLT;
+    reg_file[PC] = 0;
+    data_regs[REG_VAL_1] = 0;
+    cntrl_regs[IMMEDIATE] = 10;
+    ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 0);
+
+
+    cntrl_regs[OPERATION] = BLT;
+    reg_file[PC] = 0;
+    data_regs[REG_VAL_1] = -1;
+    cntrl_regs[IMMEDIATE] = 10;
+    ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 10);
+
+    delete_mem();
+
+}
+
+
+// Test BRZ
+TEST(BRZ, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = BRZ;
+    cntrl_regs[OPERAND_1] = R1;
+    cntrl_regs[IMMEDIATE] = 10;
+    reg_file[PC] = 0;
+    reg_file[R1] = 5;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 5);
+    EXPECT_EQ(cntrl_regs[IMMEDIATE], 10);
+
+    // expect fail
+    cntrl_regs[OPERAND_1] = 22;
+    ret = decode();
+    EXPECT_EQ(ret, false);
+    
+    
+    delete_mem();
+
+}
+
+TEST(BRZ, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    reg_file[PC] = 0;
+    cntrl_regs[OPERATION] = BRZ;
+    data_regs[REG_VAL_1] = 5;
+    cntrl_regs[IMMEDIATE] = 10;
+    bool ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 0);
+
+    cntrl_regs[OPERATION] = BRZ;
+    reg_file[PC] = 0;
+    data_regs[REG_VAL_1] = 0;
+    cntrl_regs[IMMEDIATE] = 10;
+    ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 10);
+
+
+    cntrl_regs[OPERATION] = BRZ;
+    reg_file[PC] = 0;
+    data_regs[REG_VAL_1] = -1;
+    cntrl_regs[IMMEDIATE] = 10;
+    ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[PC], 0);
+
+    delete_mem();
+
+}
+
+
+// Test ISTR
+TEST(ISTR, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    reg_file[R1] = 5;
+    reg_file[R2] = 10;
+    cntrl_regs[OPERATION] = ISTR;
+    cntrl_regs[OPERAND_1] = R1;
+    cntrl_regs[OPERAND_2] = R2;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 5);
+    EXPECT_EQ(data_regs[REG_VAL_2], 10);
+    
+    delete_mem();
+
+    // expect fail
+    cntrl_regs[OPERAND_1] = 22;
+    cntrl_regs[OPERAND_2] = 22;
+    ret = decode();
+
+    EXPECT_EQ(ret, false);
+
+}
+
+TEST(ISTR, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = ISTR;
+    data_regs[REG_VAL_1] = 500;
+    data_regs[REG_VAL_2] = 10;
+    bool ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(*reinterpret_cast<unsigned int*>(prog_mem + 10), 500);
+
+    delete_mem();
+
+}
+
+// Test ILDR
+TEST(ILDR, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    reg_file[R1] = 5;
+    reg_file[R2] = 500;
+    cntrl_regs[OPERATION] = ILDR;
+    cntrl_regs[OPERAND_1] = R1;
+    cntrl_regs[OPERAND_2] = R2;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 500);
+    
+    delete_mem();
+
+    // expect fail
+    cntrl_regs[OPERAND_1] = 22;
+    cntrl_regs[OPERAND_2] = 22;
+    ret = decode();
+
+    EXPECT_EQ(ret, false);
+
+}
+
+TEST(ILDR, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = ILDR;
+    prog_mem[10] = 244;
+    prog_mem[10] = 1;
+    data_regs[REG_VAL_1] = 5;
+    data_regs[REG_VAL_2] = 10;
+    cntrl_regs[OPERAND_1] = R1;
+    bool ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[R1], 5);
+
+    delete_mem();
+
+}
+
+// Test ISTB
+TEST(ISTB, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    reg_file[R1] = 5;
+    reg_file[R2] = 10;
+    cntrl_regs[OPERATION] = ISTB;
+    cntrl_regs[OPERAND_1] = R1;
+    cntrl_regs[OPERAND_2] = R2;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 5);
+    EXPECT_EQ(data_regs[REG_VAL_2], 10);
+    
+    delete_mem();
+
+    // expect fail
+    cntrl_regs[OPERAND_1] = 22;
+    cntrl_regs[OPERAND_2] = 22;
+    ret = decode();
+
+    EXPECT_EQ(ret, false);
+
+}
+
+TEST(ISTB, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = ISTB;
+    data_regs[REG_VAL_1] = 5;
+    data_regs[REG_VAL_2] = 10;
+    bool ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(prog_mem[10], 5);
+
+    delete_mem();
+
+}
+
+// Test ILDB
+TEST(ILDB, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    reg_file[R1] = 5;
+    reg_file[R2] = 10;
+    cntrl_regs[OPERATION] = ILDB;
+    cntrl_regs[OPERAND_1] = R1;
+    cntrl_regs[OPERAND_2] = R2;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 10);
+    
+    delete_mem();
+
+    // expect fail
+    cntrl_regs[OPERAND_1] = 22;
+    cntrl_regs[OPERAND_2] = 22;
+    ret = decode();
+
+    EXPECT_EQ(ret, false);
+
+}
+
+TEST(ILDB, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = ILDB;
+    data_regs[REG_VAL_1] = 5;
+    data_regs[REG_VAL_2] = 10;
+    cntrl_regs[OPERAND_1] = R1;
+    bool ret = execute();
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[R1], 5);
+
+    delete_mem();
+
+}
+
+
+// Test CMP
+TEST(CMP, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = CMP;
+    cntrl_regs[OPERAND_2] = R1;
+    cntrl_regs[OPERAND_3] = R2;
+    reg_file[R1] = 5;
+    reg_file[R2] = 5;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 5);
+    EXPECT_EQ(data_regs[REG_VAL_2], 5);
+    
+    delete_mem();
+
+}
+
+TEST(CMP, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = CMP;
+    cntrl_regs[OPERAND_1] = R1;
+    data_regs[REG_VAL_1] = 5;
+    data_regs[REG_VAL_2] = 5;
+    bool ret = execute();
+
+    // test eq
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(static_cast<int>(reg_file[R1]), 0);
+
+    // test gt 
+    data_regs[REG_VAL_2] = -1;
+    ret = execute();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(static_cast<int>(reg_file[R1]), 1);
+
+    // test lt
+    data_regs[REG_VAL_2] = 9;
+    ret = execute();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(static_cast<int>(reg_file[R1]), -1);
+
+    delete_mem();
+
+}
+
+// Test CMPI
+TEST(CMPI, DECODE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = CMP;
+    cntrl_regs[OPERAND_2] = R1;
+    cntrl_regs[OPERAND_3] = R2;
+    reg_file[R1] = 5;
+    reg_file[R2] = 5;
+    bool ret = decode(); 
+
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 5);
+    
+    delete_mem();
+
+}
+
+TEST(CMPI, EXECUTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = CMPI;
+    cntrl_regs[OPERAND_1] = R1;
+    data_regs[REG_VAL_1] = 5;
+    cntrl_regs[IMMEDIATE] = 5;
+    bool ret = execute();
+
+    // test eq
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(static_cast<int>(reg_file[R1]), 0);
+
+    // test gt 
+    cntrl_regs[IMMEDIATE] = -1;
+    ret = execute();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(static_cast<int>(reg_file[R1]), 1);
+
+    // test lt
+    cntrl_regs[IMMEDIATE] = 9;
+    ret = execute();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(static_cast<int>(reg_file[R1]), -1);
+
+    delete_mem();
+
+}
+
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);

@@ -19,6 +19,10 @@ extern unsigned int data_regs[];
 // true if system is running, false if halt is read
 extern bool running;
 
+// declare variable for cache measurement
+extern unsigned int mem_cycle_cntr;
+
+
 // enums to access above arrays
 enum RegNames {R0=0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, PC, SL, SB, SP, FP, HP};
 enum CntrlRegNames {OPERATION=0, OPERAND_1, OPERAND_2, OPERAND_3, IMMEDIATE};
