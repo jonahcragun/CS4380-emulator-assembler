@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <cstdio>
 #include "../include/emu4380.h"
+#include "../include/cache.h"
 
 // test init_mem
 TEST(init, ValidInput) {
@@ -789,8 +790,113 @@ TEST(CMPI, EXECUTE) {
 
 }
 
+TEST(_CACHE, READ_CACHE_BYTE) {
+    init_mem(DEFAULT_MEM_SIZE);
+    mem_cycle_cntr = 0;
+    prog_mem[100] = 1;
+    prog_mem[101] = 2;
+    prog_mem[102] = 3;
+    prog_mem[103] = 4;
+    prog_mem[111] = 5;
+    prog_mem[1021] = 7;
+    prog_mem[1120] = 6;
+
+    // init direct mapped cache
+    init_cache(1);
+
+    cache_byte cb = get_cache_byte(100);
+    EXPECT_EQ(cb.byte, 1);
+    EXPECT_EQ(cb.penalty, 15);
+
+    cb = get_cache_byte(101);
+    EXPECT_EQ(cb.byte, 2);
+    EXPECT_EQ(cb.penalty, 1);
+
+    cb = get_cache_byte(111);
+    EXPECT_EQ(cb.byte, 5);
+    EXPECT_EQ(cb.penalty, 1);
+
+    cb = get_cache_byte(1021);
+    EXPECT_EQ(cb.byte, 7);
+    EXPECT_EQ(cb.penalty, 15);
+
+    // change value in cache line before overwitting it
+    cache[6*cache_set_size].block[4] = 10;
+    cache[6*cache_set_size].block[7] = 200;
+
+    cb = get_cache_byte(1120);
+    EXPECT_EQ(cb.byte, 6);
+    EXPECT_EQ(cb.penalty, 29);
+
+    // check value was written to memory correctly
+    EXPECT_EQ(prog_mem[100], 10);
+    EXPECT_EQ(prog_mem[101], 2);
+    EXPECT_EQ(prog_mem[102], 3);
+    EXPECT_EQ(prog_mem[103], 200);
+    EXPECT_EQ(prog_mem[111], 5);
+
+    // ******************************
+
+    // test on fully associative
+    for (int i = 0; i < CACHE_SIZE; ++i) 
+        cache[i].valid = false;
+    init_cache(3);
+
+    mem_cycle_cntr = 0;
+    prog_mem[100] = 1;
+    prog_mem[101] = 2;
+    prog_mem[102] = 3;
+    prog_mem[103] = 4;
+    prog_mem[111] = 5;
+    prog_mem[1021] = 7;
+    prog_mem[1120] = 6;
+
+
+    cb = get_cache_byte(100);
+    EXPECT_EQ(cb.byte, 1);
+    EXPECT_EQ(cb.penalty, 15);
+
+    cb = get_cache_byte(101);
+    EXPECT_EQ(cb.byte, 2);
+    EXPECT_EQ(cb.penalty, 1);
+
+    cb = get_cache_byte(111);
+    EXPECT_EQ(cb.byte, 5);
+    EXPECT_EQ(cb.penalty, 1);
+
+    cb = get_cache_byte(1021);
+    EXPECT_EQ(cb.byte, 7);
+    EXPECT_EQ(cb.penalty, 15);
+
+    // change value in cache line before overwitting it
+    cache[6*cache_set_size].block[4] = 10;
+    cache[6*cache_set_size].block[7] = 200;
+
+    cb = get_cache_byte(1120);
+    EXPECT_EQ(cb.byte, 6);
+    EXPECT_EQ(cb.penalty, 15);
+
+    prog_mem[2144] = 15;
+    cb = get_cache_byte(2144);
+    EXPECT_EQ(cb.byte, 15);
+    EXPECT_EQ(cb.penalty, 29);
+
+
+    // check value was written to memory correctly
+    EXPECT_EQ(prog_mem[100], 10);
+    EXPECT_EQ(prog_mem[101], 2);
+    EXPECT_EQ(prog_mem[102], 3);
+    EXPECT_EQ(prog_mem[103], 200);
+    EXPECT_EQ(prog_mem[111], 5);
+
+
+
+    delete_mem();
+}
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+
+

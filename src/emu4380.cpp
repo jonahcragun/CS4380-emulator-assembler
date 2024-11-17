@@ -2,10 +2,36 @@
 #include <fstream>
 #include <cstddef>
 #include <iostream>
+#include <vector>
+#include "../include/cache.h"
 using std::string;
 using std::cout;
 using std::endl;
 using std::cin;
+using std::vector;
+
+// *****
+// cache
+// *****
+
+void init_cache(unsigned int cacheType) {
+    if (cacheType == 0) {
+        // indicates no cache is being used
+        cache_set_size = 0;
+    }
+    else if (cacheType == 1) {
+        // direct mapped
+        cache_set_size = 1;
+    }
+    else if (cacheType == 2) {
+        // fully associative
+        cache_set_size = CACHE_SIZE;
+    }
+    else if (cacheType == 3) {
+        // cache is set to set size of 2
+        cache_set_size = 2;
+    }
+}
 
 // *************
 // variable defs
@@ -19,6 +45,51 @@ bool running = true;
 
 // define cache measurement vars
 unsigned int mem_cycle_cntr = 0;
+
+// *************
+// Memory access
+// *************
+
+// get byte from memory
+unsigned char readByte(unsigned int address) {
+    unsigned char c;
+    c = prog_mem[address];
+    mem_cycle_cntr += 8;
+    return c;
+}
+
+// get int  from memory
+unsigned int readWord(unsigned int address) {
+    unsigned int i;
+    i = *reinterpret_cast<unsigned int*>(prog_mem + address);
+    mem_cycle_cntr += 8;
+    return i;
+}
+
+// store byte in memory
+void writeByte(unsigned int address, unsigned char byte) {
+    unsigned char c;
+    prog_mem[address] = byte;
+    mem_cycle_cntr += 8;
+}
+
+// store int in  memory
+void writeWord(unsigned int address, unsigned int word) {
+    unsigned int i;
+    *reinterpret_cast<unsigned int*>(prog_mem + address) = word;
+    mem_cycle_cntr += 8;
+}
+
+// read multiple words at a time (first word increments counter by 8, all others increments counter by 2)
+// returns a vector containing num_words values
+vector<unsigned int> readWords(unsigned int address, unsigned int num_words) {
+    vector<unsigned int> words;
+    for (int i = 0; i < num_words; ++i) {
+        words.push_back(*reinterpret_cast<unsigned int*>(prog_mem + address + i * WORD_SIZE));
+    }
+    mem_cycle_cntr += 8 + 2 * (num_words - 1);
+    return words;
+}
 
 // ****************
 // inititialization
@@ -65,11 +136,16 @@ unsigned int read_file(string file) {
 bool fetch() {
     // check if addr is valid 
     if (reg_file[PC] + 7 > mem_size) return false;
-    for (size_t i = OPERATION; i < IMMEDIATE; ++i) {
-        size_t addr = reg_file[PC] + i; 
-        cntrl_regs[OPERATION + i] = prog_mem[addr]; 
+
+    // get instruction from memory (2 words)
+    vector<unsigned int> words = readWords(reg_file[PC], 2);
+
+    // move instruction values to correct cntrl_reg position
+    for (size_t i = 0; i < WORD_SIZE; ++i) {
+        unsigned int word = words.at(0);
+        cntrl_regs[i] = *(reinterpret_cast<unsigned char*>(&word) + i); 
     }
-    cntrl_regs[IMMEDIATE] = *reinterpret_cast<unsigned int*>(prog_mem + reg_file[PC] + IMMEDIATE);
+    cntrl_regs[IMMEDIATE] = words.at(1);
     
     // increment pc 8 bytes (1 instruction)
     reg_file[PC] += 8;
@@ -226,19 +302,19 @@ bool execute() {
             break;
         case(STR):
             if (cntrl_regs[IMMEDIATE] > mem_size) return false;
-            *reinterpret_cast<unsigned int*>(prog_mem + cntrl_regs[IMMEDIATE]) = data_regs[REG_VAL_1];
+            writeWord(cntrl_regs[IMMEDIATE], *reinterpret_cast<unsigned int*>(data_regs + REG_VAL_1));
             break;
         case(LDR):
             if (cntrl_regs[IMMEDIATE] > mem_size) return false;
-            reg_file[cntrl_regs[OPERAND_1]] = *reinterpret_cast<unsigned int*>(prog_mem + cntrl_regs[IMMEDIATE]);
+            reg_file[cntrl_regs[OPERAND_1]] = readWord(cntrl_regs[IMMEDIATE]);
             break;
         case(STB):
             if (cntrl_regs[IMMEDIATE] > mem_size) return false;
-            prog_mem[cntrl_regs[IMMEDIATE]] = *reinterpret_cast<unsigned char*>(data_regs + REG_VAL_1);
+            writeByte(cntrl_regs[IMMEDIATE], *reinterpret_cast<unsigned char*>(data_regs + REG_VAL_1));
             break;
         case(LDB):
             if (cntrl_regs[IMMEDIATE] > mem_size) return false;
-            *reinterpret_cast<unsigned char*>(reg_file + cntrl_regs[OPERAND_1]) = prog_mem[cntrl_regs[IMMEDIATE]];
+            *reinterpret_cast<unsigned char*>(reg_file + cntrl_regs[OPERAND_1]) = readByte(cntrl_regs[IMMEDIATE]);
             break;
         case(ADD):
             reg_file[cntrl_regs[OPERAND_1]] = data_regs[REG_VAL_1] + data_regs[REG_VAL_2];
@@ -273,6 +349,7 @@ bool execute() {
         case(TRP):
             switch (cntrl_regs[IMMEDIATE]) {
                 case(HALT):
+                    cout << "Ececution completed. Total memory cycles: " << mem_cycle_cntr << "\n";
                     running = false;
                     break;
                 case(WINT):
