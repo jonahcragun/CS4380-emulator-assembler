@@ -38,5 +38,7 @@ extern unsigned long long cache_counter;
 // accessed_mem allows us to determine if memory has already be accessed so when the function is called again we know what the penalty is
 cache_byte get_cache_byte(unsigned int address, bool read_mem = false, bool wrote_mem = false);
 cache_word get_cache_words(unsigned int address, unsigned int num_words = 1);
+cache_byte write_cache_byte(unsigned int address, unsigned char byte, bool read_mem = false, bool wrote_mem = false);
+unsigned int write_cache_word(unsigned int address, unsigned int word);
 
 #endif

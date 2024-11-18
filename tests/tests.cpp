@@ -791,6 +791,10 @@ TEST(CMPI, EXECUTE) {
 }
 
 TEST(_CACHE, GET_CACHE_BYTE) {
+    // test on fully associative
+    for (int i = 0; i < CACHE_SIZE; ++i) 
+        cache[i].valid = false;
+
     init_mem(DEFAULT_MEM_SIZE);
     mem_cycle_cntr = 0;
     prog_mem[100] = 1;
@@ -895,6 +899,10 @@ TEST(_CACHE, GET_CACHE_BYTE) {
 }
 
 TEST(_CACHE, GET_CACHE_WORDS) {
+    // test on fully associative
+    for (int i = 0; i < CACHE_SIZE; ++i) 
+        cache[i].valid = false;
+
     init_mem(DEFAULT_MEM_SIZE);
     init_cache(1);
 
@@ -906,8 +914,8 @@ TEST(_CACHE, GET_CACHE_WORDS) {
     prog_mem[111] = 5;
     prog_mem[112] = 1;
     prog_mem[1021] = 1;
-    prog_mem[1135] = 6;
-    prog_mem[1139] = 7;
+    prog_mem[1133] = 6;
+    prog_mem[1137] = 7;
 
     cache_word cw = get_cache_words(100);
     EXPECT_EQ(cw.words.at(0), 1);
@@ -921,15 +929,85 @@ TEST(_CACHE, GET_CACHE_WORDS) {
     EXPECT_EQ(cw.words.at(0), 261);
     EXPECT_EQ(cw.penalty, 1);
 
-    cw = get_cache_words(1135);
+    cw = get_cache_words(1133);
     EXPECT_EQ(cw.words.at(0), 6);
     EXPECT_EQ(cw.penalty, 45);
 
-    cw = get_cache_words(1135, 2);
+    cw = get_cache_words(1133, 2);
     EXPECT_EQ(cw.words.at(0), 6);
     EXPECT_EQ(cw.words.at(1), 7);
     EXPECT_EQ(cw.penalty, 1);
     
+    delete_mem();
+}
+
+TEST(_CACHE, WRITE_CACHE_BYTE) {
+    // test on fully associative
+    for (int i = 0; i < CACHE_SIZE; ++i) 
+        cache[i].valid = false;
+
+    init_mem(DEFAULT_MEM_SIZE);
+    init_cache(1);
+
+    cache_byte cb = write_cache_byte(100, 1);
+    EXPECT_EQ(cb.penalty, 15);
+    EXPECT_EQ(cache[6*cache_set_size].block[4], 1);
+
+    cb = write_cache_byte(105, 3);
+    EXPECT_EQ(cb.penalty, 1);
+    EXPECT_EQ(cache[6*cache_set_size].block[9], 3);
+
+    cb = write_cache_byte(1120, 10);
+    EXPECT_EQ(cb.penalty, 29);
+    EXPECT_EQ(cache[6*cache_set_size].block[0], 10);
+
+    EXPECT_EQ(prog_mem[100], 1);
+    EXPECT_EQ(prog_mem[105], 3);
+
+    delete_mem();
+}
+
+TEST(_CACHE, WRITE_CACHE_WORD) {
+    // test on fully associative
+    for (int i = 0; i < CACHE_SIZE; ++i) 
+        cache[i].valid = false;
+    
+    init_mem(DEFAULT_MEM_SIZE);
+    init_cache(1);
+
+    unsigned int pen = write_cache_word(100, 197121);
+    EXPECT_EQ(pen, 15);
+    EXPECT_EQ(cache[6].block[4], 1);
+    EXPECT_EQ(cache[6].block[5], 2);
+    EXPECT_EQ(cache[6].block[6], 3);
+
+    pen = write_cache_word(112, 197121);
+    EXPECT_EQ(pen, 15);
+    EXPECT_EQ(cache[7].block[0], 1);
+    EXPECT_EQ(cache[7].block[1], 2);
+    EXPECT_EQ(cache[7].block[2], 3);
+    EXPECT_EQ(cache[7].block[3], 0);
+
+    pen = write_cache_word(116, 256);
+    EXPECT_EQ(pen, 1);
+    EXPECT_EQ(cache[7].block[0], 1);
+    EXPECT_EQ(cache[7].block[1], 2);
+    EXPECT_EQ(cache[7].block[2], 3);
+    EXPECT_EQ(cache[7].block[3], 0);
+    EXPECT_EQ(cache[7].block[4], 0);
+    EXPECT_EQ(cache[7].block[5], 1);
+    EXPECT_EQ(cache[7].block[6], 0);
+
+    pen = write_cache_word(1133, 16974337);
+    EXPECT_EQ(pen, 45);
+    EXPECT_EQ(cache[6].block[12], 0);
+    EXPECT_EQ(cache[6].block[13], 1);
+    EXPECT_EQ(cache[6].block[14], 2);
+    EXPECT_EQ(cache[6].block[15], 3);
+    EXPECT_EQ(cache[7].block[0], 1);
+    EXPECT_EQ(cache[7].block[1], 0);
+    EXPECT_EQ(cache[7].block[2], 0);
+
     delete_mem();
 }
 
