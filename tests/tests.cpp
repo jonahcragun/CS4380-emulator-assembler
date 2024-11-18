@@ -790,7 +790,7 @@ TEST(CMPI, EXECUTE) {
 
 }
 
-TEST(_CACHE, READ_CACHE_BYTE) {
+TEST(_CACHE, GET_CACHE_BYTE) {
     init_mem(DEFAULT_MEM_SIZE);
     mem_cycle_cntr = 0;
     prog_mem[100] = 1;
@@ -891,6 +891,45 @@ TEST(_CACHE, READ_CACHE_BYTE) {
 
 
 
+    delete_mem();
+}
+
+TEST(_CACHE, GET_CACHE_WORDS) {
+    init_mem(DEFAULT_MEM_SIZE);
+    init_cache(1);
+
+    mem_cycle_cntr = 0;
+    prog_mem[100] = 1;
+    prog_mem[104] = 2;
+    prog_mem[105] = 3;
+    prog_mem[106] = 4;
+    prog_mem[111] = 5;
+    prog_mem[112] = 1;
+    prog_mem[1021] = 1;
+    prog_mem[1135] = 6;
+    prog_mem[1139] = 7;
+
+    cache_word cw = get_cache_words(100);
+    EXPECT_EQ(cw.words.at(0), 1);
+    EXPECT_EQ(cw.penalty, 15);
+    
+    cw = get_cache_words(111);
+    EXPECT_EQ(cw.words.at(0), 261);
+    EXPECT_EQ(cw.penalty, 15);
+
+    cw = get_cache_words(111);
+    EXPECT_EQ(cw.words.at(0), 261);
+    EXPECT_EQ(cw.penalty, 1);
+
+    cw = get_cache_words(1135);
+    EXPECT_EQ(cw.words.at(0), 6);
+    EXPECT_EQ(cw.penalty, 45);
+
+    cw = get_cache_words(1135, 2);
+    EXPECT_EQ(cw.words.at(0), 6);
+    EXPECT_EQ(cw.words.at(1), 7);
+    EXPECT_EQ(cw.penalty, 1);
+    
     delete_mem();
 }
 

@@ -11,7 +11,7 @@ unsigned int cache_set_size = 0;
 unsigned long long cache_counter = 0;
 
 // get byte from the cache
-cache_byte get_cache_byte(unsigned int address) {
+cache_byte get_cache_byte(unsigned int address, bool read_mem, bool wrote_mem) {
     // increment cache counter
     cache_counter++;
 
@@ -61,12 +61,19 @@ cache_byte get_cache_byte(unsigned int address) {
     }
 
     // save value in cache to mem before overwrite
+    
     old_line = cache[s * cache_set_size + pos];
     for (int i = 0; i < 4; ++i) {
         unsigned int* word = reinterpret_cast<unsigned int*>(&old_line.block[i * WORD_SIZE]);
         *reinterpret_cast<unsigned int*>(prog_mem + (old_line.tag << (s_size + block_bits)) + (s << block_bits) + i * WORD_SIZE) = *word;
     }
-    cb.penalty += 8 + 2 * 3;
+    if (!wrote_mem) {
+        cb.penalty += 8 + 2 * 3;
+        cb.wrote_mem = true;
+    }
+    else {
+        cb.penalty += 2 * 4;
+    }
 
     // tag not in line, read line from memory
     read_line:
@@ -75,30 +82,42 @@ cache_byte get_cache_byte(unsigned int address) {
         for (size_t j = 0; j < WORD_SIZE; ++j)
             cache[s * cache_set_size + pos].block[i * WORD_SIZE + j] = *(reinterpret_cast<unsigned char*>(&word) + j); 
     }
-    cb.penalty += 8 + 2 * 3;
+    cache[s * cache_set_size + pos].tag = tag;
+    if (!read_mem) {
+        cb.penalty += 8 + 2 * 3;
+        cb.read_mem = true;
+    }
+    else {
+        cb.penalty += 2 * 4;
+    }
 
     // get byte from cache
     get_byte:
     cb.byte = cache[s * cache_set_size + pos].block[block_offset];
     cache[s * cache_set_size + pos].last_used = cache_counter;
 
-//    for (int i = 0; i < 16; ++i) {
-//        std::cout << (int)cache[s*cache_set_size+pos].block[i] << " : " << (tag << (s_size + block_bits)) + (s << block_bits) + i << std::endl;
-//    }
-//    std::cout << std::endl;
 
     return cb;
 }
 
 // get word from the cache
-cache_word get_cache_word(unsigned int address) {
+cache_word get_cache_words(unsigned int address, unsigned int num_words) {
     cache_word cw;
+    unsigned char word[4];
+    bool read_mem = false;
+    bool wrote_mem = false;
 
-    // tag not in line, read line from mem
-    for (int i = 0; i < 4; ++i) {
-        unsigned int word = *reinterpret_cast<unsigned int*>(prog_mem + address + i * WORD_SIZE);
-        for (size_t i = 0; i < WORD_SIZE; ++i) 
-            cache[0].block[0] = *(reinterpret_cast<unsigned char*>(&word) + i); 
+    cw.penalty = 1;
+    
+    for (int j = 0; j < num_words; ++j) {
+        for (int i = 0; i < WORD_SIZE; ++i) {
+            cache_byte cb = get_cache_byte(address + i + (j * WORD_SIZE), read_mem, wrote_mem);
+            cw.penalty += cb.penalty - 1;
+            word[i] = cb.byte;
+            read_mem = cb.read_mem;
+            wrote_mem = cb.wrote_mem;
+        }
+        cw.words.push_back(*reinterpret_cast<unsigned int*>(word));
     }
 
     return cw;

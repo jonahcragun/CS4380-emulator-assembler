@@ -1,5 +1,6 @@
 #ifndef CACHE_H
 #define CACHE_H
+#include <vector>
 
 // ***************************
 // declare components of cache
@@ -20,19 +21,22 @@ struct cache_line {
 // use word or byte based on the function calling cache
 struct cache_word {
     unsigned int penalty;
-    unsigned int word;
+    std::vector<unsigned int> words;
 };
 
 struct cache_byte {
     unsigned int penalty;
     unsigned char byte;
+    bool read_mem = false;
+    bool wrote_mem = false;
 };
 
 // cache
 extern cache_line cache [];
 extern unsigned int cache_set_size;
 extern unsigned long long cache_counter;
-cache_byte get_cache_byte(unsigned int address);
-cache_word get_cache_word(unsigned int address);
+// accessed_mem allows us to determine if memory has already be accessed so when the function is called again we know what the penalty is
+cache_byte get_cache_byte(unsigned int address, bool read_mem = false, bool wrote_mem = false);
+cache_word get_cache_words(unsigned int address, unsigned int num_words = 1);
 
 #endif
