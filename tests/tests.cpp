@@ -180,6 +180,7 @@ TEST(decode, dataRegs) {
 // testing execute instruction
 TEST(execute, CorrectExecution) {
     init_mem(DEFAULT_MEM_SIZE);
+    init_cache(0);
     size_t fret = read_file("../tests/correct_instr.bin");
     EXPECT_EQ(fret, 0);
     reg_file[PC] = *reinterpret_cast<unsigned int*>(prog_mem);
@@ -937,6 +938,11 @@ TEST(_CACHE, GET_CACHE_WORDS) {
     EXPECT_EQ(cw.words.at(0), 6);
     EXPECT_EQ(cw.words.at(1), 7);
     EXPECT_EQ(cw.penalty, 1);
+
+    cw = get_cache_words(111);
+    EXPECT_EQ(cw.words.at(0), 261);
+    EXPECT_EQ(cw.penalty, 45);
+
     
     delete_mem();
 }

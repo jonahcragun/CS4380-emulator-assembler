@@ -1,56 +1,79 @@
 #include <iostream>
 #include <fstream>
 #include "../include/emu4380.h"
+#include <exception>
+#include <cstring>
 using std::string;
 using std::cout;
 using std::endl;
 
 
-#define MAX_ARGS 3
 #define MIN_ARGS 2
-#define MEM_SIZE_POS 2
+#define TAG_POS 2
 #define FILE_POS 1
 
 // verify cl arguments are valid
-bool args_valid(int argc, char** argv) {
+int args_valid(int argc, char** argv) {
     // contains 1-2 arguments
-    if (argc > MAX_ARGS || argc < MIN_ARGS) return false;
+    if (argc < MIN_ARGS) {
+        std::cout << "Invalid arguments entered." << std::endl;
+        return 1;
+    }
+
     // check file exists
     std::ifstream ifs (argv[FILE_POS]);
     if (ifs.fail()) {
         ifs.close();
-        return false;
+        std::cout << "Invalid arguments entered." << std::endl;
+        return 1;
     }
     ifs.close();
-    // valid memory size
-    try {
-        if (argc == MAX_ARGS && (std::stoul(*(argv + MEM_SIZE_POS)) > 4294967295 || std::stoul(*(argv + MEM_SIZE_POS)) < 0)) return false;
+
+    // validate flags
+    unsigned int mem_size = DEFAULT_MEM_SIZE;
+    unsigned int cache_config = 0;
+    for (int i = TAG_POS; i < argc; i+=2) {
+            cout << argv[i] << endl;
+        if (!strcmp(argv[i], "-m")) {
+            // valid memory size
+            try {
+                if (std::stoul(*(argv + i + 1)) > 4294967295) throw std::range_error("out of bounds");
+            }
+            catch (...) {
+                cout << "Invalid memory configuration. Aborting.\n";
+                return 2;
+            }
+        }
+        else if (!strcmp(argv[i], "-c")) {
+            try {
+                if (std::stoi(*(argv + i + 1)) < 0 || std::stoi(*(argv + i + 1)) > 3) throw std::range_error("out of bounds");
+            }
+            catch(...) {
+                cout << "Invalid cache configuration. Aborting.\n"; 
+                return 2;
+            }
+        }
+        else {
+            cout << "Invalid arguments entered." << endl;
+            return 1;
+        }
     }
-    catch (...) {
-        return false;
-    }
+
+    // initialize memory and cache
+    init_mem(mem_size);
+    init_cache(cache_config);
+
     // is valid
-    return true;
+    return 0;
 }
 
 
 int main(int argc, char* argv[]) {
     // validate args
-    if (!args_valid(argc, argv)) {
-        std::cout << "invalid arguments entered" << std::endl;
-        return 1;
+    int ret = args_valid(argc, argv);
+    if (ret != 0) {
+        return ret;
     }
-
-    // initialize emulator memory
-    unsigned mem_size = 0;
-    if (argc == MAX_ARGS) {
-        mem_size = std::stoul(argv[MEM_SIZE_POS]);
-    }
-    else {
-        mem_size = DEFAULT_MEM_SIZE;
-    }
-
-    init_mem(mem_size);
 
     // read in file 
     unsigned int file_read = read_file(argv[FILE_POS]);

@@ -52,43 +52,76 @@ unsigned int mem_cycle_cntr = 0;
 
 // get byte from memory
 unsigned char readByte(unsigned int address) {
-    unsigned char c;
-    c = prog_mem[address];
-    mem_cycle_cntr += 8;
-    return c;
+    if (!cache_set_size) {
+        unsigned char c;
+        c = prog_mem[address];
+        mem_cycle_cntr += 8;
+        return c;
+    }
+    else {
+        cache_byte cb = get_cache_byte(address);
+        mem_cycle_cntr += cb.penalty;
+        return cb.byte;
+    }
 }
 
 // get int  from memory
 unsigned int readWord(unsigned int address) {
-    unsigned int i;
-    i = *reinterpret_cast<unsigned int*>(prog_mem + address);
-    mem_cycle_cntr += 8;
-    return i;
+    if (!cache_set_size) {
+        unsigned int i;
+        i = *reinterpret_cast<unsigned int*>(prog_mem + address);
+        mem_cycle_cntr += 8;
+        return i;
+    }
+    else {
+        cache_word cw = get_cache_words(address);
+        mem_cycle_cntr += cw.penalty;
+        return cw.words[0];
+    }
 }
 
 // store byte in memory
 void writeByte(unsigned int address, unsigned char byte) {
-    unsigned char c;
-    prog_mem[address] = byte;
-    mem_cycle_cntr += 8;
+    if (!cache_set_size) {
+        unsigned char c;
+        prog_mem[address] = byte;
+        mem_cycle_cntr += 8;
+    }
+    else {
+        cache_byte cb = write_cache_byte(address, byte);
+        mem_cycle_cntr += cb.penalty;
+    }
 }
 
 // store int in  memory
 void writeWord(unsigned int address, unsigned int word) {
-    unsigned int i;
-    *reinterpret_cast<unsigned int*>(prog_mem + address) = word;
-    mem_cycle_cntr += 8;
+    if (!cache_set_size) {
+        unsigned int i;
+        *reinterpret_cast<unsigned int*>(prog_mem + address) = word;
+        mem_cycle_cntr += 8;
+    }
+    else {
+        unsigned int penalty = write_cache_word(address, word);
+        mem_cycle_cntr += penalty;
+    }
 }
 
 // read multiple words at a time (first word increments counter by 8, all others increments counter by 2)
 // returns a vector containing num_words values
 vector<unsigned int> readWords(unsigned int address, unsigned int num_words) {
-    vector<unsigned int> words;
-    for (int i = 0; i < num_words; ++i) {
-        words.push_back(*reinterpret_cast<unsigned int*>(prog_mem + address + i * WORD_SIZE));
+    if (!cache_set_size) {
+        vector<unsigned int> words;
+        for (int i = 0; i < num_words; ++i) {
+            words.push_back(*reinterpret_cast<unsigned int*>(prog_mem + address + i * WORD_SIZE));
+        }
+        mem_cycle_cntr += 8 + 2 * (num_words - 1);
+        return words;
     }
-    mem_cycle_cntr += 8 + 2 * (num_words - 1);
-    return words;
+    else {
+        cache_word cw = get_cache_words(address, num_words);
+        mem_cycle_cntr += cw.penalty;
+        return cw.words;
+    }
 }
 
 // ****************
@@ -349,7 +382,7 @@ bool execute() {
         case(TRP):
             switch (cntrl_regs[IMMEDIATE]) {
                 case(HALT):
-                    cout << "Ececution completed. Total memory cycles: " << mem_cycle_cntr << "\n";
+                    cout << "Execution completed. Total memory cycles: " << mem_cycle_cntr << "\n";
                     running = false;
                     break;
                 case(WINT):
