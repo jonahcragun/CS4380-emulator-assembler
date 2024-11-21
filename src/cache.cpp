@@ -37,6 +37,7 @@ cache_byte get_cache_byte(unsigned int address, bool read_mem, bool wrote_mem) {
     mask = 1;
     unsigned int tag = address >> (block_bits + s_size);
 
+//    std::cout << tag << " " << s << " " << block_offset << std::endl;
     // check if tag is in cache
     int pos;
     for (pos = 0; pos < cache_set_size; ++pos) {
@@ -63,12 +64,12 @@ cache_byte get_cache_byte(unsigned int address, bool read_mem, bool wrote_mem) {
     // save value in cache to mem before overwrite
     
     old_line = cache[s * cache_set_size + pos];
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < BLOCK_SIZE/WORD_SIZE; ++i) {
         unsigned int* word = reinterpret_cast<unsigned int*>(&old_line.block[i * WORD_SIZE]);
         *reinterpret_cast<unsigned int*>(prog_mem + (old_line.tag << (s_size + block_bits)) + (s << block_bits) + i * WORD_SIZE) = *word;
     }
     if (!wrote_mem) {
-        cb.penalty += 8 + 2 * 3;
+        cb.penalty += 8 + 2 * (BLOCK_SIZE/WORD_SIZE - 1);
         cb.wrote_mem = true;
     }
     else {
@@ -77,14 +78,14 @@ cache_byte get_cache_byte(unsigned int address, bool read_mem, bool wrote_mem) {
 
     // tag not in line, read line from memory
     read_line:
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < BLOCK_SIZE/WORD_SIZE; ++i) {
         unsigned int word = *reinterpret_cast<unsigned int*>(prog_mem + (tag << (s_size + block_bits)) + (s << block_bits) + i * WORD_SIZE);
         for (size_t j = 0; j < WORD_SIZE; ++j)
             cache[s * cache_set_size + pos].block[i * WORD_SIZE + j] = *(reinterpret_cast<unsigned char*>(&word) + j); 
     }
     cache[s * cache_set_size + pos].tag = tag;
     if (!read_mem) {
-        cb.penalty += 8 + 2 * 3;
+        cb.penalty += 8 + 2 * (BLOCK_SIZE/WORD_SIZE - 1);
         cb.read_mem = true;
     }
     else {
@@ -99,6 +100,12 @@ cache_byte get_cache_byte(unsigned int address, bool read_mem, bool wrote_mem) {
         cb.read_mem = true;
     if (wrote_mem)
         cb.wrote_mem = true;
+
+//      std::cout << "block:" << std::endl;
+//      for (int i = 0; i < BLOCK_SIZE; ++i) {
+//          std::cout << (int)cache[s*cache_set_size+pos].block[i] << std::endl;
+//      }
+//      std::cout << "------------------------" << std::endl;
 
     return cb;
 }
@@ -122,6 +129,8 @@ cache_word get_cache_words(unsigned int address, unsigned int num_words) {
         }
         cw.words.push_back(*reinterpret_cast<unsigned int*>(word));
     }
+//    for (unsigned int i : cw.words)
+//        std::cout << i << std::endl;
 
     return cw;
 }
