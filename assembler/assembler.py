@@ -780,8 +780,6 @@ class Assembler:
 
     # print error message and exit program with proper return value
     def handle_error(self, ret: int) -> None:
-        print(self.mem)
-        print(self.labels)
         if ret == 1:
             print(f'USAGE: python3 asm4380.py inputFile.asm')
             exit(ret)
