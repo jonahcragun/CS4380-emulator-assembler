@@ -77,3 +77,15 @@ def test_second_pass():
     ret = asm.second_pass()
     assert asm.mem == [12, 1, 0, 0, 0, 1, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0]
     assert ret == 0
+
+# **************************************************
+# Tests added for resubmission
+# **************************************************
+
+def test_parse_more_instr():
+    asm = Assembler()
+    asm.file = " jmp MAIN\nMAIN mov r0, r1    \n add r2, r3, r4\n addi r0, r0, #5\n muli r6, r7,		  #12		      ; hell\n trp #0"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    print(asm.mem)
+    assert ret == 0
