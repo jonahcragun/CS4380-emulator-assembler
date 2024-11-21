@@ -118,13 +118,11 @@ vector<unsigned int> readWords(unsigned int address, unsigned int num_words) {
             words.push_back(*reinterpret_cast<unsigned int*>(prog_mem + address + i * WORD_SIZE));
         }
         mem_cycle_cntr += 8 + 2 * (num_words - 1);
-        cout << mem_cycle_cntr << endl;
         return words;
     }
     else {
         cache_word cw = get_cache_words(address, num_words);
         mem_cycle_cntr += cw.penalty;
-        cout << cw.penalty << " : " << mem_cycle_cntr << endl;
         return cw.words;
     }
 }
