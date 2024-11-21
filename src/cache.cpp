@@ -100,7 +100,6 @@ cache_byte get_cache_byte(unsigned int address, bool read_mem, bool wrote_mem) {
     if (wrote_mem)
         cb.wrote_mem = true;
 
-
     return cb;
 }
 

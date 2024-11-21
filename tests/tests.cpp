@@ -609,13 +609,12 @@ TEST(ILDR, EXECUTE) {
     cntrl_regs[OPERATION] = ILDR;
     prog_mem[10] = 244;
     prog_mem[10] = 1;
-    data_regs[REG_VAL_1] = 5;
-    data_regs[REG_VAL_2] = 10;
+    data_regs[REG_VAL_1] = 10;
     cntrl_regs[OPERAND_1] = R1;
     bool ret = execute();
 
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(reg_file[R1], 5);
+    EXPECT_EQ(reg_file[R1], 1);
 
     delete_mem();
 
@@ -687,8 +686,8 @@ TEST(ILDB, DECODE) {
 TEST(ILDB, EXECUTE) {
     init_mem(DEFAULT_MEM_SIZE);
     cntrl_regs[OPERATION] = ILDB;
-    data_regs[REG_VAL_1] = 5;
-    data_regs[REG_VAL_2] = 10;
+    prog_mem[10] = 5;
+    data_regs[REG_VAL_1] = 10;
     cntrl_regs[OPERAND_1] = R1;
     bool ret = execute();
 
@@ -1013,6 +1012,118 @@ TEST(_CACHE, WRITE_CACHE_WORD) {
     EXPECT_EQ(cache[7].block[0], 1);
     EXPECT_EQ(cache[7].block[1], 0);
     EXPECT_EQ(cache[7].block[2], 0);
+
+    delete_mem();
+}
+
+TEST(mem_cycle_cntr, readByte) {
+    unsigned char b;
+    init_mem(DEFAULT_MEM_SIZE);
+    prog_mem[100] = 1;
+    prog_mem[101] = 2;
+    prog_mem[102] = 3;
+    prog_mem[103] = 4;
+    prog_mem[104] = 5;
+    prog_mem[105] = 6;
+    prog_mem[106] = 7;
+    prog_mem[107] = 8;
+    prog_mem[108] = 9;
+    prog_mem[109] = 10;
+    prog_mem[110] = 11;
+    prog_mem[111] = 12;
+    prog_mem[112] = 13;
+    prog_mem[113] = 14;
+    prog_mem[114] = 15;
+    prog_mem[115] = 16;
+    prog_mem[116] = 17;
+    prog_mem[117] = 18;
+    prog_mem[118] = 19;
+    prog_mem[1120] = 20;
+    prog_mem[1121] = 21;
+    prog_mem[1122] = 22;
+    prog_mem[1123] = 23;
+
+    init_cache(0);
+    mem_cycle_cntr = 0;
+    
+    b = readByte(100);
+    EXPECT_EQ(b, 1);
+    EXPECT_EQ(mem_cycle_cntr, 8);
+    b = readByte(101);
+    EXPECT_EQ(b, 2);
+    EXPECT_EQ(mem_cycle_cntr, 16);
+    b = readByte(106);
+    EXPECT_EQ(b, 7);
+    EXPECT_EQ(mem_cycle_cntr, 24);
+    b = readByte(115);
+    EXPECT_EQ(b, 16);
+    EXPECT_EQ(mem_cycle_cntr, 32);
+    b = readByte(116);
+    EXPECT_EQ(b, 17);
+    EXPECT_EQ(mem_cycle_cntr, 40);
+
+    // test direct mapped cache
+    init_cache(1);
+    mem_cycle_cntr = 0;
+    
+    b = readByte(100);
+    EXPECT_EQ(b, 1);
+    EXPECT_EQ(mem_cycle_cntr, 15);
+    b = readByte(101);
+    EXPECT_EQ(b, 2);
+    EXPECT_EQ(mem_cycle_cntr, 16);
+    b = readByte(106);
+    EXPECT_EQ(b, 7);
+    EXPECT_EQ(mem_cycle_cntr, 17);
+    b = readByte(1120);
+    EXPECT_EQ(b, 20);
+    EXPECT_EQ(mem_cycle_cntr, 46);
+    b = readByte(1121);
+    EXPECT_EQ(b, 21);
+    EXPECT_EQ(mem_cycle_cntr, 47);
+
+
+    // test fully associative cache
+    init_cache(2);
+    mem_cycle_cntr = 0;
+    
+    b = readByte(100);
+    EXPECT_EQ(b, 1);
+    EXPECT_EQ(mem_cycle_cntr, 15);
+    b = readByte(101);
+    EXPECT_EQ(b, 2);
+    EXPECT_EQ(mem_cycle_cntr, 16);
+    b = readByte(106);
+    EXPECT_EQ(b, 7);
+    EXPECT_EQ(mem_cycle_cntr, 17);
+    b = readByte(1120);
+    EXPECT_EQ(b, 20);
+    EXPECT_EQ(mem_cycle_cntr, 32);
+    b = readByte(1121);
+    EXPECT_EQ(b, 21);
+    EXPECT_EQ(mem_cycle_cntr, 33);
+    
+    // test direct mapped on read word cache
+    unsigned int w;
+    init_cache(1);
+    mem_cycle_cntr = 0;
+    
+    w = readWord(111);
+    EXPECT_EQ(w, 1);
+    EXPECT_EQ(mem_cycle_cntr, 23);
+    w = readWord(112);
+    EXPECT_EQ(w, 2);
+    EXPECT_EQ(mem_cycle_cntr, 24);
+    w = readWord(117);
+    EXPECT_EQ(w, 7);
+    EXPECT_EQ(mem_cycle_cntr, 25);
+    w = readWord(1133);
+    EXPECT_EQ(w, 20);
+    EXPECT_EQ(mem_cycle_cntr, 70);
+    w = readWord(1134);
+    EXPECT_EQ(w, 21);
+    EXPECT_EQ(mem_cycle_cntr, 71);
+
 
     delete_mem();
 }

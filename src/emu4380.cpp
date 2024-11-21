@@ -15,6 +15,9 @@ using std::vector;
 // *****
 
 void init_cache(unsigned int cacheType) {
+    for (int i = 0; i < CACHE_SIZE; ++i) 
+        cache[i].valid = false;
+    
     if (cacheType == 0) {
         // indicates no cache is being used
         cache_set_size = 0;
@@ -115,11 +118,13 @@ vector<unsigned int> readWords(unsigned int address, unsigned int num_words) {
             words.push_back(*reinterpret_cast<unsigned int*>(prog_mem + address + i * WORD_SIZE));
         }
         mem_cycle_cntr += 8 + 2 * (num_words - 1);
+        cout << mem_cycle_cntr << endl;
         return words;
     }
     else {
         cache_word cw = get_cache_words(address, num_words);
         mem_cycle_cntr += cw.penalty;
+        cout << cw.penalty << " : " << mem_cycle_cntr << endl;
         return cw.words;
     }
 }
@@ -430,13 +435,13 @@ bool execute() {
             *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_2]) = data_regs[REG_VAL_1];
             break;
         case(ILDR):
-            reg_file[data_regs[REG_VAL_1]] = *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_2]);
+            reg_file[cntrl_regs[OPERAND_1]] = *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_1]);
             break;
         case(ISTB):
             prog_mem[data_regs[REG_VAL_2]] = data_regs[REG_VAL_1];
             break;
         case(ILDB):
-            reg_file[data_regs[REG_VAL_1]] = prog_mem[data_regs[REG_VAL_2]];
+            reg_file[cntrl_regs[OPERAND_1]] = prog_mem[data_regs[REG_VAL_2]];
             break;
         case(CMP):
             if (static_cast<int>(data_regs[REG_VAL_1]) == static_cast<int>(data_regs[REG_VAL_2])) {
