@@ -15,8 +15,10 @@ using std::vector;
 // *****
 
 void init_cache(unsigned int cacheType) {
-    for (int i = 0; i < CACHE_SIZE; ++i) 
+    for (int i = 0; i < CACHE_SIZE; ++i)  {
         cache[i].valid = false;
+        cache[i].dirty = false;
+    }
     
     if (cacheType == 0) {
         // indicates no cache is being used

@@ -58,6 +58,8 @@ cache_byte get_cache_byte(unsigned int address, bool read_mem, bool wrote_mem) {
         if (cache[s * cache_set_size + i].last_used < lru) {
             pos = i;
             lru = cache[s * cache_set_size + i].last_used;
+            if (!cache[s * cache_set_size + i].dirty)
+                goto read_line;
         }
     }
 
@@ -67,6 +69,7 @@ cache_byte get_cache_byte(unsigned int address, bool read_mem, bool wrote_mem) {
     for (int i = 0; i < BLOCK_SIZE/WORD_SIZE; ++i) {
         unsigned int* word = reinterpret_cast<unsigned int*>(&old_line.block[i * WORD_SIZE]);
         *reinterpret_cast<unsigned int*>(prog_mem + (old_line.tag << (s_size + block_bits)) + (s << block_bits) + i * WORD_SIZE) = *word;
+        old_line.dirty = false;
     }
     if (!wrote_mem) {
         cb.penalty += 8 + 2 * (BLOCK_SIZE/WORD_SIZE - 1);
@@ -182,6 +185,8 @@ cache_byte write_cache_byte(unsigned int address, unsigned char byte, bool read_
             pos = i;
             lru = cache[s * cache_set_size + i].last_used;
         }
+        if (!cache[s * cache_set_size + i].dirty)
+            goto read_line;
     }
 
     // save value in cache to mem before overwrite
@@ -190,6 +195,7 @@ cache_byte write_cache_byte(unsigned int address, unsigned char byte, bool read_
     for (int i = 0; i < 4; ++i) {
         unsigned int* word = reinterpret_cast<unsigned int*>(&old_line.block[i * WORD_SIZE]);
         *reinterpret_cast<unsigned int*>(prog_mem + (old_line.tag << (s_size + block_bits)) + (s << block_bits) + i * WORD_SIZE) = *word;
+        old_line.dirty = false;
     }
     if (!wrote_mem) {
         cb.penalty += 8 + 2 * 3;
@@ -219,6 +225,7 @@ cache_byte write_cache_byte(unsigned int address, unsigned char byte, bool read_
     get_byte:
     cache[s * cache_set_size + pos].block[block_offset] = byte;
     cache[s * cache_set_size + pos].last_used = cache_counter;
+    cache[s * cache_set_size + pos].dirty = true;
     if (read_mem)
         cb.read_mem = true;
     if (wrote_mem)

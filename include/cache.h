@@ -11,7 +11,8 @@
 
 // cache line
 struct cache_line {
-    bool valid = 0;
+    bool valid = 0; // when true cache line is currently in use
+    bool dirty = 0; // when true cache data has been changed and needs to be written back
     unsigned int tag;
     unsigned char block[BLOCK_SIZE];
     unsigned int last_used = 0;

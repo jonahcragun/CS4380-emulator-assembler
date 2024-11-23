@@ -827,6 +827,7 @@ TEST(_CACHE, GET_CACHE_BYTE) {
     // change value in cache line before overwitting it
     cache[6*cache_set_size].block[4] = 10;
     cache[6*cache_set_size].block[7] = 200;
+    cache[6*cache_set_size].dirty = true;
 
     cb = get_cache_byte(1120);
     EXPECT_EQ(cb.byte, 6);
@@ -875,6 +876,7 @@ TEST(_CACHE, GET_CACHE_BYTE) {
     // change value in cache line before overwitting it
     cache[6*cache_set_size].block[4] = 10;
     cache[6*cache_set_size].block[7] = 200;
+    cache[6*cache_set_size].dirty = true;
 
     cb = get_cache_byte(1120);
     EXPECT_EQ(cb.byte, 6);
@@ -931,13 +933,15 @@ TEST(_CACHE, GET_CACHE_WORDS) {
 
     cw = get_cache_words(1133);
     EXPECT_EQ(cw.words.at(0), 6);
-    EXPECT_EQ(cw.penalty, 45);
+    EXPECT_EQ(cw.penalty, 23);
 
     cw = get_cache_words(1133, 2);
     EXPECT_EQ(cw.words.at(0), 6);
     EXPECT_EQ(cw.words.at(1), 7);
     EXPECT_EQ(cw.penalty, 1);
 
+    cache[6*cache_set_size].dirty = true;
+    cache[7*cache_set_size].dirty = true;
     cw = get_cache_words(111);
     EXPECT_EQ(cw.words.at(0), 261);
     EXPECT_EQ(cw.penalty, 45);
@@ -1077,10 +1081,10 @@ TEST(mem_cycle_cntr, readByte) {
     EXPECT_EQ(mem_cycle_cntr, 17);
     b = readByte(1120);
     EXPECT_EQ(b, 20);
-    EXPECT_EQ(mem_cycle_cntr, 46);
+    EXPECT_EQ(mem_cycle_cntr, 32);
     b = readByte(1121);
     EXPECT_EQ(b, 21);
-    EXPECT_EQ(mem_cycle_cntr, 47);
+    EXPECT_EQ(mem_cycle_cntr, 33);
 
 
     // test fully associative cache
@@ -1117,12 +1121,13 @@ TEST(mem_cycle_cntr, readByte) {
     w = readWord(117);
     // EXPECT_EQ(w, 7);
     EXPECT_EQ(mem_cycle_cntr, 25);
+    cache[6*cache_set_size].dirty = true;
     w = readWord(1133);
     // EXPECT_EQ(w, 20);
-    EXPECT_EQ(mem_cycle_cntr, 70);
+    EXPECT_EQ(mem_cycle_cntr, 62);
     w = readWord(1134);
     // EXPECT_EQ(w, 21);
-    EXPECT_EQ(mem_cycle_cntr, 71);
+    EXPECT_EQ(mem_cycle_cntr, 63);
 
 
     delete_mem();
