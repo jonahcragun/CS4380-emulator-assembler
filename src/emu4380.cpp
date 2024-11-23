@@ -432,16 +432,16 @@ bool execute() {
                 reg_file[PC] = cntrl_regs[IMMEDIATE];
             break;
         case(ISTR):
-            *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_2]) = data_regs[REG_VAL_1];
+            writeWord(data_regs[REG_VAL_2], data_regs[REG_VAL_1]);
             break;
         case(ILDR):
-            reg_file[cntrl_regs[OPERAND_1]] = *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_1]);
+            reg_file[cntrl_regs[OPERAND_1]] = readWord(data_regs[REG_VAL_1]);
             break;
         case(ISTB):
-            prog_mem[data_regs[REG_VAL_2]] = data_regs[REG_VAL_1];
+            writeByte(data_regs[REG_VAL_2], data_regs[REG_VAL_1]);
             break;
         case(ILDB):
-            reg_file[cntrl_regs[OPERAND_1]] = prog_mem[data_regs[REG_VAL_2]];
+            reg_file[cntrl_regs[OPERAND_1]] = readByte(data_regs[REG_VAL_2]);
             break;
         case(CMP):
             if (static_cast<int>(data_regs[REG_VAL_1]) == static_cast<int>(data_regs[REG_VAL_2])) {
