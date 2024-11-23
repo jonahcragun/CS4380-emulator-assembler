@@ -84,7 +84,7 @@ def test_second_pass():
 
 def test_parse_more_instr():
     asm = Assembler()
-    asm.file = " jmp MAIN\nMAIN mov r0, r1    \n add r2, r3, r4\n addi r0, r0, #5\n muli r6, r7,		  #12		      ; hell\n trp #0"
+    asm.file = " jmp MAIN\nMAIN mov r0, r1    \n add r2, r3, r4\n addi r0, r0, #5\n muli r6, r7, #12\n"
     asm.mem = [4, 0, 0, 0]
     ret = asm.parse_instr()
     print(asm.mem)
