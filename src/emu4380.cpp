@@ -19,6 +19,7 @@ void init_cache(unsigned int cacheType) {
         cache[i].valid = false;
         cache[i].dirty = false;
     }
+    cache_counter = 0;
     
     if (cacheType == 0) {
         // indicates no cache is being used

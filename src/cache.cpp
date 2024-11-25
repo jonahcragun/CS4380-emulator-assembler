@@ -46,7 +46,7 @@ cache_byte get_cache_byte(unsigned int address, bool read_mem, bool wrote_mem) {
             goto get_byte;
     }
 
-    // get least recently used line in set
+    // check for empty cache lines
     pos = 0;
     lru = cache_counter;
     for (int i = 0; i < cache_set_size; ++i) {
@@ -55,6 +55,10 @@ cache_byte get_cache_byte(unsigned int address, bool read_mem, bool wrote_mem) {
             pos = i;
             goto read_line; 
         }
+    }
+
+    // all cache lines are full pick the lru to kick out
+    for (int i = 0; i < cache_set_size; ++i) {
         if (cache[s * cache_set_size + i].last_used < lru) {
             pos = i;
             lru = cache[s * cache_set_size + i].last_used;
