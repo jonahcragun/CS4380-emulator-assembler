@@ -176,7 +176,7 @@ cache_byte write_cache_byte(unsigned int address, unsigned char byte, bool read_
             goto get_byte;
     }
 
-    // get least recently used line in set
+    // check for empty cache lines
     pos = 0;
     lru = cache_counter;
     for (int i = 0; i < cache_set_size; ++i) {
@@ -185,12 +185,16 @@ cache_byte write_cache_byte(unsigned int address, unsigned char byte, bool read_
             pos = i;
             goto read_line; 
         }
+    }
+
+    // all cache lines are full pick the lru to kick out
+    for (int i = 0; i < cache_set_size; ++i) {
         if (cache[s * cache_set_size + i].last_used < lru) {
             pos = i;
             lru = cache[s * cache_set_size + i].last_used;
+            if (!cache[s * cache_set_size + i].dirty)
+                goto read_line;
         }
-        if (!cache[s * cache_set_size + i].dirty)
-            goto read_line;
     }
 
     // save value in cache to mem before overwrite
