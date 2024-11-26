@@ -36,7 +36,7 @@ int args_valid(int argc, char** argv) {
         if (!strcmp(argv[i], "-m")) {
             // valid memory size
             try {
-                if (std::stoul(*(argv + i + 1)) > 4294967295) throw std::range_error("out of bounds");
+                if (i+1 >= argc || std::stoul(*(argv + i + 1)) > 4294967295) throw std::range_error("out of bounds");
                 mem_size = atoi(*(argv + i + 1));
             }
             catch (...) {
@@ -46,7 +46,7 @@ int args_valid(int argc, char** argv) {
         }
         else if (!strcmp(argv[i], "-c")) {
             try {
-                if (std::stoi(*(argv + i + 1)) < 0 || std::stoi(*(argv + i + 1)) > 3) throw std::range_error("out of bounds");
+                if (i+1 >= argc || std::stoi(*(argv + i + 1)) < 0 || std::stoi(*(argv + i + 1)) > 3) throw std::range_error("out of bounds");
                 cache_config = atoi(*(argv + i + 1));
             }
             catch(...) {
