@@ -22,6 +22,7 @@ Total Hours before deadline:     20
 
 After Deadline:
 | Date       | Hours | Description                                      |
+|------------|-------|--------------------------------------------------|
 | 11-9-2024  | 2     | adding new  features to the emulator/Design      |  
 | 11-11-2024 | 4.5   | adding cache to the emulator/Design              |  
 | 11-12-2024 | 2     | adding cache to the emulator/Design              |  
