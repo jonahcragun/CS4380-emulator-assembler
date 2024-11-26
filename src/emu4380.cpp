@@ -2,10 +2,42 @@
 #include <fstream>
 #include <cstddef>
 #include <iostream>
+#include <vector>
+#include "../include/cache.h"
 using std::string;
 using std::cout;
 using std::endl;
 using std::cin;
+using std::vector;
+
+// *****
+// cache
+// *****
+
+void init_cache(unsigned int cacheType) {
+    for (int i = 0; i < CACHE_SIZE; ++i)  {
+        cache[i].valid = false;
+        cache[i].dirty = false;
+    }
+    cache_counter = 0;
+    
+    if (cacheType == 0) {
+        // indicates no cache is being used
+        cache_set_size = 0;
+    }
+    else if (cacheType == 1) {
+        // direct mapped
+        cache_set_size = 1;
+    }
+    else if (cacheType == 2) {
+        // fully associative
+        cache_set_size = CACHE_SIZE;
+    }
+    else if (cacheType == 3) {
+        // cache is set to set size of 2
+        cache_set_size = 2;
+    }
+}
 
 // *************
 // variable defs
@@ -16,6 +48,87 @@ unsigned int reg_file [NUM_REGS] = {0};
 unsigned int cntrl_regs[NUM_CNTRL_REGS] = {0};
 unsigned int data_regs[NUM_DATA_REGS] = {0};
 bool running = true;
+
+// define cache measurement vars
+unsigned int mem_cycle_cntr = 0;
+
+// *************
+// Memory access
+// *************
+
+// get byte from memory
+unsigned char readByte(unsigned int address) {
+    if (!cache_set_size) {
+        unsigned char c;
+        c = prog_mem[address];
+        mem_cycle_cntr += 8;
+        return c;
+    }
+    else {
+        cache_byte cb = get_cache_byte(address);
+        mem_cycle_cntr += cb.penalty;
+        return cb.byte;
+    }
+}
+
+// get int  from memory
+unsigned int readWord(unsigned int address) {
+    if (!cache_set_size) {
+        unsigned int i;
+        i = *reinterpret_cast<unsigned int*>(prog_mem + address);
+        mem_cycle_cntr += 8;
+        return i;
+    }
+    else {
+        cache_word cw = get_cache_words(address);
+        mem_cycle_cntr += cw.penalty;
+        return cw.words[0];
+    }
+}
+
+// store byte in memory
+void writeByte(unsigned int address, unsigned char byte) {
+    if (!cache_set_size) {
+        unsigned char c;
+        prog_mem[address] = byte;
+        mem_cycle_cntr += 8;
+    }
+    else {
+        cache_byte cb = write_cache_byte(address, byte);
+        mem_cycle_cntr += cb.penalty;
+    }
+}
+
+// store int in  memory
+void writeWord(unsigned int address, unsigned int word) {
+    if (!cache_set_size) {
+        unsigned int i;
+        *reinterpret_cast<unsigned int*>(prog_mem + address) = word;
+        mem_cycle_cntr += 8;
+    }
+    else {
+        unsigned int penalty = write_cache_word(address, word);
+        mem_cycle_cntr += penalty;
+    }
+}
+
+// read multiple words at a time (first word increments counter by 8, all others increments counter by 2)
+// returns a vector containing num_words values
+vector<unsigned int> readWords(unsigned int address, unsigned int num_words) {
+    if (!cache_set_size) {
+        vector<unsigned int> words;
+        for (int i = 0; i < num_words; ++i) {
+            words.push_back(*reinterpret_cast<unsigned int*>(prog_mem + address + i * WORD_SIZE));
+        }
+        mem_cycle_cntr += 8 + 2 * (num_words - 1);
+        return words;
+    }
+    else {
+        cache_word cw = get_cache_words(address, num_words);
+        mem_cycle_cntr += cw.penalty;
+        return cw.words;
+    }
+}
 
 // ****************
 // inititialization
@@ -62,11 +175,16 @@ unsigned int read_file(string file) {
 bool fetch() {
     // check if addr is valid 
     if (reg_file[PC] + 7 > mem_size) return false;
-    for (size_t i = OPERATION; i < IMMEDIATE; ++i) {
-        size_t addr = reg_file[PC] + i; 
-        cntrl_regs[OPERATION + i] = prog_mem[addr]; 
+
+    // get instruction from memory (2 words)
+    vector<unsigned int> words = readWords(reg_file[PC], 2);
+
+    // move instruction values to correct cntrl_reg position
+    for (size_t i = 0; i < WORD_SIZE; ++i) {
+        unsigned int word = words.at(0);
+        cntrl_regs[i] = *(reinterpret_cast<unsigned char*>(&word) + i); 
     }
-    cntrl_regs[IMMEDIATE] = *reinterpret_cast<unsigned int*>(prog_mem + reg_file[PC] + IMMEDIATE);
+    cntrl_regs[IMMEDIATE] = words.at(1);
     
     // increment pc 8 bytes (1 instruction)
     reg_file[PC] += 8;
@@ -80,74 +198,121 @@ bool decode() {
         case(JMP):
             break;
         case(MOV):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(MOVI):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
             break;
         case(LDA):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
             break;
         case(STR):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]];
             break;
         case(LDR):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
             break;
         case(STB):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]];
             break;
         case(LDB):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
             break;
         case(ADD):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(ADDI):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             break;
         case(SUB):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(SUBI):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             break;
         case(MUL):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(MULI):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             break;
         case(DIV):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(SDIV):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(DIVI):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             break;
         case(TRP):
             // traps include immediate values 0-4 and 98
             if (cntrl_regs[IMMEDIATE] > RCHAR && cntrl_regs[IMMEDIATE] != PREGS) return false;
+            break;
+        case(ISTR):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]];
+            break;
+        case(ILDR):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]]; 
+            break;
+        case(ISTB):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_2]];
+            break;
+        case(ILDB):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]]; 
+            break;
+        case(JMR):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            break;
+        case(BNZ):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            break;
+        case(BGT):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            break;
+        case(BLT):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            break;
+        case(BRZ):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            break;
+        case(CMP):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]]; 
+            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]]; 
+            break;
+        case(CMPI):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]]; 
             break;
         default:
             // invalid instruction
@@ -176,19 +341,19 @@ bool execute() {
             break;
         case(STR):
             if (cntrl_regs[IMMEDIATE] > mem_size) return false;
-            *reinterpret_cast<unsigned int*>(prog_mem + cntrl_regs[IMMEDIATE]) = data_regs[REG_VAL_1];
+            writeWord(cntrl_regs[IMMEDIATE], *reinterpret_cast<unsigned int*>(data_regs + REG_VAL_1));
             break;
         case(LDR):
             if (cntrl_regs[IMMEDIATE] > mem_size) return false;
-            reg_file[cntrl_regs[OPERAND_1]] = *reinterpret_cast<unsigned int*>(prog_mem + cntrl_regs[IMMEDIATE]);
+            reg_file[cntrl_regs[OPERAND_1]] = readWord(cntrl_regs[IMMEDIATE]);
             break;
         case(STB):
             if (cntrl_regs[IMMEDIATE] > mem_size) return false;
-            prog_mem[cntrl_regs[IMMEDIATE]] = *reinterpret_cast<unsigned char*>(data_regs + REG_VAL_1);
+            writeByte(cntrl_regs[IMMEDIATE], *reinterpret_cast<unsigned char*>(data_regs + REG_VAL_1));
             break;
         case(LDB):
             if (cntrl_regs[IMMEDIATE] > mem_size) return false;
-            *reinterpret_cast<unsigned char*>(reg_file + cntrl_regs[OPERAND_1]) = prog_mem[cntrl_regs[IMMEDIATE]];
+            *reinterpret_cast<unsigned char*>(reg_file + cntrl_regs[OPERAND_1]) = readByte(cntrl_regs[IMMEDIATE]);
             break;
         case(ADD):
             reg_file[cntrl_regs[OPERAND_1]] = data_regs[REG_VAL_1] + data_regs[REG_VAL_2];
@@ -223,6 +388,7 @@ bool execute() {
         case(TRP):
             switch (cntrl_regs[IMMEDIATE]) {
                 case(HALT):
+                    cout << "Execution completed. Total memory cycles: " << mem_cycle_cntr << "\n";
                     running = false;
                     break;
                 case(WINT):
@@ -245,6 +411,59 @@ bool execute() {
                 default:
                     // invalid trap
                     return false;
+            }
+            break;
+        case(JMR):
+            reg_file[PC] = data_regs[REG_VAL_1];
+            break;
+        case(BNZ):
+            if (static_cast<int>(data_regs[REG_VAL_1]) != 0)
+                reg_file[PC] = cntrl_regs[IMMEDIATE];
+            break;
+        case(BGT):
+            if (static_cast<int>(data_regs[REG_VAL_1]) > 0)
+                reg_file[PC] = cntrl_regs[IMMEDIATE];
+            break;
+        case(BLT):
+            if (static_cast<int>(data_regs[REG_VAL_1]) < 0)
+                reg_file[PC] = cntrl_regs[IMMEDIATE];
+            break;
+        case(BRZ):
+            if (static_cast<int>(data_regs[REG_VAL_1]) == 0)
+                reg_file[PC] = cntrl_regs[IMMEDIATE];
+            break;
+        case(ISTR):
+            writeWord(data_regs[REG_VAL_2], data_regs[REG_VAL_1]);
+            break;
+        case(ILDR):
+            reg_file[cntrl_regs[OPERAND_1]] = readWord(data_regs[REG_VAL_1]);
+            break;
+        case(ISTB):
+            writeByte(data_regs[REG_VAL_2], data_regs[REG_VAL_1]);
+            break;
+        case(ILDB):
+            reg_file[cntrl_regs[OPERAND_1]] = readByte(data_regs[REG_VAL_2]);
+            break;
+        case(CMP):
+            if (static_cast<int>(data_regs[REG_VAL_1]) == static_cast<int>(data_regs[REG_VAL_2])) {
+                reg_file[cntrl_regs[OPERAND_1]] = 0;
+            }
+            else if (static_cast<int>(data_regs[REG_VAL_1]) > static_cast<int>(data_regs[REG_VAL_2])) {
+                reg_file[cntrl_regs[OPERAND_1]] = 1;
+            }
+            else {
+                reg_file[cntrl_regs[OPERAND_1]] = -1;
+            }
+            break;
+        case(CMPI):
+            if (static_cast<int>(data_regs[REG_VAL_1]) == static_cast<int>(cntrl_regs[IMMEDIATE])) {
+                reg_file[cntrl_regs[OPERAND_1]] = 0;
+            }
+            else if (static_cast<int>(data_regs[REG_VAL_1]) > static_cast<int>(cntrl_regs[IMMEDIATE])) {
+                reg_file[cntrl_regs[OPERAND_1]] = 1;
+            }
+            else {
+                reg_file[cntrl_regs[OPERAND_1]] = -1;
             }
             break;
         default:
