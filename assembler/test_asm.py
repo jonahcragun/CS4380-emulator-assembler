@@ -84,8 +84,33 @@ def test_second_pass():
 
 def test_parse_more_instr():
     asm = Assembler()
-    asm.file = " jmp MAIN\nMAIN mov r0, r1    \n add r2, r3, r4\n addi r0, r0, #5\n muli r6, r7, #12\n"
+    asm.file = " jmp MAIN\nMAIN mov r0, r1    \n add r2, r3, r4\n addi r0, r0, #5\n muli r6, r7, #12012301230123012302130123"
     asm.mem = [4, 0, 0, 0]
     ret = asm.parse_instr()
     print(asm.mem)
     assert ret == 0
+
+    asm.file = " jmp MAIN\nMAIN muli r6, r7, #10101000000000000000001010123232001"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 0
+
+def test_invalid_instr():
+    asm = Assembler()
+    asm.file = " jmp MAIN\nMAIN mov r0, r1 \n LTR r0, LEFT"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+
+    asm.file = " jmp MAIN\nMAIN mov r0, r1 \n LDR r0, LEFT \n"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert asm.mem == [4, 0, 0, 0, 1, 0, 0, 0, 'MAIN', 0, 0, 0, 7, 0, 1, 0, 0, 0, 0, 0, 11, 0, 0, 0, 'LEFT', 0, 0, 0]
+    assert ret == 0
+
+
+    asm.file = " jmp MAIN\nMAIN mov r0, r1 \n LDR r0, LEFT\n mulli r0, r15, #12 \n"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2

@@ -453,8 +453,11 @@ class Assembler:
                         s = State.OPERATOR
                         operator += c.upper()
                     elif re.match(r'[ \t]', c):
-                        s = State.OPERATOR_DONE
-                        self.mem.append(Instr[operator].value)
+                        if operator in [n.name for n in Instr]:
+                            s = State.OPERATOR_DONE
+                            self.mem.append(Instr[operator].value)
+                        else:
+                            s = State.ERROR
                     else:
                         s = State.ERROR
                 case State.OPERATOR_DONE:
