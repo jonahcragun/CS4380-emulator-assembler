@@ -203,69 +203,75 @@ bool decode() {
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(MOVI):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
             break;
         case(LDA):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
             break;
         case(STR):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]];
             break;
         case(LDR):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
             break;
         case(STB):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]];
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = *reinterpret_cast<unsigned char*>(&reg_file[cntrl_regs[OPERAND_1]]);
             break;
         case(LDB):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
             break;
         case(ADD):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(ADDI):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             break;
         case(SUB):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(SUBI):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             break;
         case(MUL):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(MULI):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             break;
         case(DIV):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(SDIV):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
             break;
         case(DIVI):
-            if (cntrl_regs[OPERAND_1] > NUM_REGS -1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
             break;
         case(TRP):
             // traps include immediate values 0-4 and 98
             if (cntrl_regs[IMMEDIATE] > RCHAR && cntrl_regs[IMMEDIATE] != PREGS) return false;
+            if (cntrl_regs[IMMEDIATE] == WINT) {
+                data_regs[REG_VAL_1] = reg_file[R3];
+            }
+            else if (cntrl_regs[IMMEDIATE] == WCHAR) {
+                data_regs[REG_VAL_1] = *reinterpret_cast<unsigned char*>(&reg_file[R3]);
+            }
             break;
         case(ISTR):
             if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
@@ -336,7 +342,6 @@ bool execute() {
             reg_file[cntrl_regs[OPERAND_1]] = cntrl_regs[IMMEDIATE];
             break;
         case(LDA):
-            if (cntrl_regs[IMMEDIATE] > mem_size) return false;
             reg_file[cntrl_regs[OPERAND_1]] = cntrl_regs[IMMEDIATE];
             break;
         case(STR):
@@ -392,13 +397,13 @@ bool execute() {
                     running = false;
                     break;
                 case(WINT):
-                    cout << reg_file[R3];
+                    cout << data_regs[REG_VAL_1];
                     break;
                 case(RINT):
                     cin >> reg_file[R3];
                     break;
                 case(WCHAR):
-                    cout << *reinterpret_cast<unsigned char*>(reg_file + R3);
+                    cout << *reinterpret_cast<unsigned char*>(&data_regs[REG_VAL_1]);
                     break;
                 case(RCHAR):
                     cin >> *reinterpret_cast<unsigned char*>(reg_file + R3);
