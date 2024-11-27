@@ -387,6 +387,7 @@ TEST(decode, memAccessInstr) {
     reg_file[HP] = 1024;
     ret = decode();
     EXPECT_EQ(ret, true);
+}
 
 // Test JMR
 TEST(JMR, DECODE) {
