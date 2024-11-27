@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <cstdio>
 #include "../include/emu4380.h"
+#include <string>
+using std::string;
 
 // test init_mem
 TEST(init, ValidInput) {
@@ -266,11 +268,123 @@ TEST(execute, CorrectExecution) {
     delete_mem();
 }
 
-TEST(execute, illegalSTR) {
+TEST(trp, writeInt) {
     init_mem(DEFAULT_MEM_SIZE);
-    EXPECT_EQ(0,0);
+    testing::internal::CaptureStdout();
+    data_regs[REG_VAL_1] = 42;
+    data_regs[REG_VAL_2] = 0;
+    cntrl_regs[OPERATION] = TRP;
+    cntrl_regs[IMMEDIATE] = 1;
+    bool ret = execute();
+    EXPECT_EQ(ret, true);
+    string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(output, "42");
+
+    testing::internal::CaptureStdout();
+    data_regs[REG_VAL_1] = 1024;
+    ret = execute();
+    EXPECT_EQ(ret, true);
+    output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(output, "1024");
+        
+    // test decode
+    cntrl_regs[0] = TRP;
+    cntrl_regs[IMMEDIATE] = 1;
+    reg_file[R3] = 4138;
+    ret = decode();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 4138);
+
+    delete_mem();
 }
 
+TEST(trp, writeChar) {
+    init_mem(DEFAULT_MEM_SIZE);
+    testing::internal::CaptureStdout();
+    data_regs[REG_VAL_1] = '*';
+    data_regs[REG_VAL_2] = 0;
+    cntrl_regs[OPERATION] = TRP;
+    cntrl_regs[IMMEDIATE] = 3;
+    bool ret = execute();
+    EXPECT_EQ(ret, true);
+    string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(output, "*");
+
+    // test decode
+    cntrl_regs[0] = TRP;
+    cntrl_regs[IMMEDIATE] = 3;
+    reg_file[R3] = 298;
+    ret = decode();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 42);
+
+
+    delete_mem();
+}
+
+TEST(execute, LDA) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = LDA;
+    cntrl_regs[OPERAND_1] = R15;
+    cntrl_regs[IMMEDIATE] = 16777215;
+    bool ret = execute();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[R15], 16777215);
+
+    cntrl_regs[OPERATION] = LDA;
+    cntrl_regs[OPERAND_1] = R15;
+    cntrl_regs[IMMEDIATE] = -1;
+    ret = execute();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[R15], -1);
+
+    cntrl_regs[OPERATION] = LDA;
+    cntrl_regs[OPERAND_1] = SB;
+    cntrl_regs[IMMEDIATE] = -1;
+    ret = execute();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(reg_file[SB], -1);
+
+    delete_mem();
+}
+
+TEST(decode, memAccessInstr) {
+    init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = STR;
+    cntrl_regs[OPERAND_1] = HP;
+    cntrl_regs[IMMEDIATE] = 20;
+    reg_file[HP] = 1024;
+    bool ret = decode();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 1024);
+
+    // test LDR
+    cntrl_regs[OPERATION] = LDR;
+    cntrl_regs[OPERAND_1] = HP;
+    cntrl_regs[IMMEDIATE] = 20;
+    reg_file[HP] = 1024;
+    ret = decode();
+    EXPECT_EQ(ret, true);
+
+    // test STB
+    cntrl_regs[OPERATION] = STB;
+    cntrl_regs[OPERAND_1] = HP;
+    cntrl_regs[IMMEDIATE] = 20;
+    reg_file[HP] = 1024;
+    ret = decode();
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(data_regs[REG_VAL_1], 0);
+
+    // test LDB
+    cntrl_regs[OPERATION] = LDB;
+    cntrl_regs[OPERAND_1] = HP;
+    cntrl_regs[IMMEDIATE] = 20;
+    reg_file[HP] = 1024;
+    ret = decode();
+    EXPECT_EQ(ret, true);
+
+    delete_mem();
+}
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
