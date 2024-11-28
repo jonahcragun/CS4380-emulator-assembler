@@ -320,6 +320,48 @@ bool decode() {
             if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]]; 
             break;
+        case(AND):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
+            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
+            break;
+        case(OR):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1 || cntrl_regs[OPERAND_3] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]];
+            data_regs[REG_VAL_2] = reg_file[cntrl_regs[OPERAND_3]];
+            break;
+        case(ALCI):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            break;
+        case(ALLC):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            break;
+        case(IALLC):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1 || cntrl_regs[OPERAND_2] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_2]]; 
+            break;
+        case(PSHR):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            break;
+        case(PSHB):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            break;
+        case(POPR):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            break;
+        case(POPB):
+            if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
+            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            break;
+        case(CALL):
+            data_regs[REG_VAL_1] = reg_file[PC];
+            break;
+        case(RET):
+            // nothing to do
+            break;
         default:
             // invalid instruction
             return false;
@@ -470,6 +512,43 @@ bool execute() {
             else {
                 reg_file[cntrl_regs[OPERAND_1]] = -1;
             }
+            break;
+        case(AND):
+            reg_file[cntrl_regs[OPERAND_1]] = data_regs[REG_VAL_1] && data_regs[REG_VAL_2];
+            break;
+        case(OR):
+            reg_file[cntrl_regs[OPERAND_1]] = data_regs[REG_VAL_1] || data_regs[REG_VAL_2];
+            break;
+        case(ALCI):
+            break;
+        case(ALLC):
+            break;
+        case(IALLC):
+            break;
+        case(PSHR):
+            reg_file[SP] -= 4;
+            *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]) = data_regs[REG_VAL_1];
+            break;
+        case(PSHB):
+            reg_file[SP]--;
+            prog_mem[reg_file[SP]] = data_regs[REG_VAL_1];
+            break;
+        case(POPR):
+            reg_file[cntrl_regs[OPERAND_1]] = *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]);
+            reg_file[SP] -= 4;
+            break;
+        case(POPB):
+            reg_file[cntrl_regs[OPERAND_1]] = prog_mem[reg_file[SP]];
+            reg_file[SP]++;
+            break;
+        case(CALL):
+            reg_file[SP] -= 4;
+            *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]) = data_regs[REG_VAL_1];
+            reg_file[PC] = cntrl_regs[IMMEDIATE];
+            break;
+        case(RET):
+            reg_file[PC] = *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]);
+            reg_file[SP] -= 4;
             break;
         default:
             // invalid instruction
