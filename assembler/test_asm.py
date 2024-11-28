@@ -609,4 +609,80 @@ def test_TRP_6():
     assert ret == 0;
     assert asm.mem == [4, 0, 0, 0, 31, 0, 0, 0, 6, 0, 0, 0]
 
+def test_BTS():
+    asm = Assembler()
+    asm.file = " .BTS #25\n .BTS #5   \t\nHELLO .Bts #3    ; trueth\n trp #0"
+    ret = asm.parse_data()
+    print(asm.mem)
+    assert ret == 0;
+    assert asm.mem == [37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    assert asm.labels == {'HELLO': 34}
 
+    # test fail
+    asm.file = " .BTS #25\n .BTS #5   \t\nHELLO .Bts #3    ; trueth\n"
+    asm.labels = {}
+    asm.mem = []
+    ret = asm.parse_data()
+    assert ret == 2;
+    
+    asm.file = " .BTS r25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .BDS #25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .BTd #25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .BTS #-25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+        
+
+def test_STR():
+    asm = Assembler()
+    asm.file = ' .STR #10\n .STR "Hello"   \t\nHELLO .str "Fred"    ; trueth\n trp #0'
+    ret = asm.parse_data()
+    print(asm.mem)
+    assert ret == 0;
+    assert asm.mem == [29, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 72, 101, 108, 108, 111, 0, 4, 70, 114, 101, 100, 0]
+    assert asm.labels == {'HELLO': 23}
+
+    # test fail
+    asm.file = " .STR #25\n .str #5   \t\nHELLO .str #3    ; trueth\n"
+    asm.labels = {}
+    asm.mem = []
+    ret = asm.parse_data()
+    assert ret == 2;
+    
+    asm.file = " .STR r25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .SDR #25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .STd #25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .STR #-25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .STR 'hello'\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;

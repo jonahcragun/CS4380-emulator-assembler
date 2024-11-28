@@ -196,12 +196,14 @@ class Assembler:
                     states[s] = False
                     if re.match(r'[ \t]', c):
                         states["str2"] = True
-                    elif c == '#':
-                        states["alloc_str_num"] = True
                     elif c == '"':
-                        states["get_str_chars"] = True
+                        state["alloc_str"] = True
+                    elif c == '#':
+                        state["alloc_str_num"] = True
+                    elif c == '"':
+                        states["get_bts_chars"] = True
                     else:
-                        states["error"] = True
+                        state["error"] = True
                 # allocate specified number of bytes for a string
                 case "alloc_str_num":
                     states[s] = False
@@ -234,7 +236,7 @@ class Assembler:
                         value += c
                         states[s] = True
                     else:
-                        states["alloc_str"] = True
+                        states["alloc_bts"] = True
                 # read str value as chars from self.file, convert to ints, store in self.mem
                 case "alloc_str":
                     states[s] = False
@@ -253,7 +255,7 @@ class Assembler:
                     elif c.lower() == 't':
                         states["bts1"] = True
                     else:
-                        states["error"] = True
+                        states["error"] == True
                 # reading chars for byt directive
                 case "byt1":
                     states[s] = False
@@ -278,7 +280,7 @@ class Assembler:
                     if c.lower() == 's':
                         states["bts2"] = True
                     else:
-                        states["error"] = True
+                        state["error"] = True
                 # reading chars for bts dirctive
                 case "bts2":
                     states[s] = False
@@ -287,7 +289,7 @@ class Assembler:
                     elif c == '#':
                         states["alloc_bts"] = True
                     else:
-                        states["error"] = True
+                        state["error"] = True
                 # allocate specified number of bytes
                 case "alloc_bts":
                     states[s] = False
@@ -295,7 +297,7 @@ class Assembler:
                         states[s] = True
                         value += c
                     elif re.match(r'[\s;]', c):
-                        # Add 25 bytes to memory initialized to 0
+                        # add 4 byte value to self.mem
                         if int(value) > self.MAX_INT or int(value) < self.MIN_INT:
                             states["error"] = True
                             continue
