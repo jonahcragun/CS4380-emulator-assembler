@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include "../include/cache.h"
+#include <filesystem>
 using std::string;
 using std::cout;
 using std::endl;
@@ -13,6 +14,7 @@ using std::vector;
 // *****
 // cache
 // *****
+
 
 void init_cache(unsigned int cacheType) {
     for (int i = 0; i < CACHE_SIZE; ++i)  {
@@ -55,6 +57,7 @@ unsigned int mem_cycle_cntr = 0;
 // *************
 // Memory access
 // *************
+
 
 // get byte from memory
 unsigned char readByte(unsigned int address) {
@@ -133,6 +136,14 @@ vector<unsigned int> readWords(unsigned int address, unsigned int num_words) {
 // ****************
 // inititialization
 // ****************
+
+// init stack regs
+void init_stack(string file) {
+    std::filesystem::path p {file};
+    reg_file[SB] = mem_size + 1; 
+    reg_file[SP] = mem_size + 1;
+    reg_file[SL] = std::filesystem::file_size(p) + 1;
+}
 
 // initialize memory array
 bool init_mem(unsigned int size) {
@@ -551,29 +562,35 @@ bool execute() {
             reg_file[HP] += *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_1]);
             break;
         case(PSHR):
+            if (reg_file[SP] - 4 < reg_file[SL]) return false;
             reg_file[SP] -= 4;
             *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]) = data_regs[REG_VAL_1];
             break;
         case(PSHB):
+            if (reg_file[SP] - 1 < reg_file[SL]) return false;
             reg_file[SP]--;
             prog_mem[reg_file[SP]] = data_regs[REG_VAL_1];
             break;
         case(POPR):
+            if (reg_file[SP] + 4 > reg_file[SB]) return false;
             reg_file[cntrl_regs[OPERAND_1]] = *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]);
-            reg_file[SP] -= 4;
+            reg_file[SP] += 4;
             break;
         case(POPB):
+            if (reg_file[SP] + 1 > reg_file[SB]) return false;
             reg_file[cntrl_regs[OPERAND_1]] = prog_mem[reg_file[SP]];
             reg_file[SP]++;
             break;
         case(CALL):
+            if (reg_file[SP] - 4 < reg_file[SL]) return false;
             reg_file[SP] -= 4;
             *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]) = data_regs[REG_VAL_1];
             reg_file[PC] = cntrl_regs[IMMEDIATE];
             break;
         case(RET):
+            if (reg_file[SP] + 4 > reg_file[SB]) return false;
             reg_file[PC] = *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]);
-            reg_file[SP] -= 4;
+            reg_file[SP] += 4;
             break;
         default:
             // invalid instruction
