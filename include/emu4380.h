@@ -46,6 +46,7 @@ bool execute();
 // initialization
 bool init_mem(unsigned int);
 unsigned int read_file(std::string);
+void init_stack(std::string);
 
 // deleteor for memory
 void delete_mem();

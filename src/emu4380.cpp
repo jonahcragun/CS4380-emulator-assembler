@@ -143,6 +143,7 @@ void init_stack(string file) {
     reg_file[SB] = mem_size + 1; 
     reg_file[SP] = mem_size + 1;
     reg_file[SL] = std::filesystem::file_size(p) + 1;
+    reg_file[HP] = std::filesystem::file_size(p) + 1;
 }
 
 // initialize memory array
@@ -354,6 +355,7 @@ bool decode() {
         case(PSHR):
             if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            data_regs[REG_VAL_2] = reg_file[SP]; 
             break;
         case(PSHB):
             if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
@@ -549,46 +551,40 @@ bool execute() {
         case(ALCI):
             if ((data_regs[REG_VAL_1] + cntrl_regs[IMMEDIATE]) >= mem_size) return false; 
             reg_file[cntrl_regs[OPERAND_1]] = data_regs[REG_VAL_1];
-            reg_file[HP] += cntrl_regs[IMMEDIATE];
+            reg_file[HP] = data_regs[REG_VAL_1] + cntrl_regs[IMMEDIATE];
             break;
         case(ALLC):
             if ((data_regs[REG_VAL_1] + *reinterpret_cast<unsigned int*>(prog_mem + cntrl_regs[IMMEDIATE])) >= mem_size) return false; 
             reg_file[cntrl_regs[OPERAND_1]] = data_regs[REG_VAL_1];
-            reg_file[HP] += *reinterpret_cast<unsigned int*>(prog_mem + cntrl_regs[IMMEDIATE]);
+            reg_file[HP] = data_regs[REG_VAL_1] + *reinterpret_cast<unsigned int*>(prog_mem + cntrl_regs[IMMEDIATE]);
             break;
         case(IALLC):
             if ((data_regs[REG_VAL_2] + *reinterpret_cast<unsigned int*>(prog_mem + cntrl_regs[IMMEDIATE])) >= mem_size) return false; 
             reg_file[cntrl_regs[OPERAND_1]] = data_regs[REG_VAL_2];
-            reg_file[HP] += *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_1]);
+            reg_file[HP] = data_regs[REG_VAL_2] + *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_1]);
             break;
         case(PSHR):
-            if (reg_file[SP] - 4 < reg_file[SL]) return false;
-            reg_file[SP] -= 4;
+            reg_file[SP] = data_regs[REG_VAL_2] - 4;
             *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]) = data_regs[REG_VAL_1];
             break;
         case(PSHB):
-            if (reg_file[SP] - 1 < reg_file[SL]) return false;
             reg_file[SP]--;
             prog_mem[reg_file[SP]] = data_regs[REG_VAL_1];
             break;
         case(POPR):
-            if (reg_file[SP] + 4 > reg_file[SB]) return false;
             reg_file[cntrl_regs[OPERAND_1]] = *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]);
             reg_file[SP] += 4;
             break;
         case(POPB):
-            if (reg_file[SP] + 1 > reg_file[SB]) return false;
             reg_file[cntrl_regs[OPERAND_1]] = prog_mem[reg_file[SP]];
             reg_file[SP]++;
             break;
         case(CALL):
-            if (reg_file[SP] - 4 < reg_file[SL]) return false;
             reg_file[SP] -= 4;
             *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]) = data_regs[REG_VAL_1];
             reg_file[PC] = cntrl_regs[IMMEDIATE];
             break;
         case(RET):
-            if (reg_file[SP] + 4 > reg_file[SB]) return false;
             reg_file[PC] = *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]);
             reg_file[SP] += 4;
             break;
