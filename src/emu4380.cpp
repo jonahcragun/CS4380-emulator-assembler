@@ -360,20 +360,22 @@ bool decode() {
         case(PSHB):
             if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
             data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            data_regs[REG_VAL_2] = reg_file[SP]; 
             break;
         case(POPR):
             if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            data_regs[REG_VAL_1] = reg_file[SP]; 
             break;
         case(POPB):
             if (cntrl_regs[OPERAND_1] > NUM_REGS - 1) return false;
-            data_regs[REG_VAL_1] = reg_file[cntrl_regs[OPERAND_1]]; 
+            data_regs[REG_VAL_1] = reg_file[SP]; 
             break;
         case(CALL):
-            data_regs[REG_VAL_1] = reg_file[PC];
+            data_regs[REG_VAL_1] = reg_file[SP];
+            data_regs[REG_VAL_2] = reg_file[PC];
             break;
         case(RET):
-            // nothing to do
+            data_regs[REG_VAL_1] = reg_file[SP];
             break;
         default:
             // invalid instruction
@@ -464,7 +466,7 @@ bool execute() {
                     cin >> *reinterpret_cast<unsigned char*>(reg_file + R3);
                     break;
                 case(WSTR):
-                    for (int i = 1; i < prog_mem[data_regs[REG_VAL_1]]; ++i) {
+                    for (int i = 1; i < prog_mem[data_regs[REG_VAL_1]] + 1; ++i) {
                         if (prog_mem[data_regs[REG_VAL_1] + i] == 0) break;
                         cout << prog_mem[data_regs[REG_VAL_1] + i];
                     }
@@ -565,28 +567,28 @@ bool execute() {
             break;
         case(PSHR):
             reg_file[SP] = data_regs[REG_VAL_2] - 4;
-            *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]) = data_regs[REG_VAL_1];
+            *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_2] - 4) = data_regs[REG_VAL_1];
             break;
         case(PSHB):
-            reg_file[SP]--;
-            prog_mem[reg_file[SP]] = data_regs[REG_VAL_1];
+            reg_file[SP] = data_regs[REG_VAL_2] - 1;
+            prog_mem[data_regs[REG_VAL_2] - 1] = data_regs[REG_VAL_1];
             break;
         case(POPR):
-            reg_file[cntrl_regs[OPERAND_1]] = *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]);
-            reg_file[SP] += 4;
+            reg_file[cntrl_regs[OPERAND_1]] = *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_1]);
+            reg_file[SP] = data_regs[REG_VAL_1] + 4;
             break;
         case(POPB):
-            reg_file[cntrl_regs[OPERAND_1]] = prog_mem[reg_file[SP]];
-            reg_file[SP]++;
+            reg_file[cntrl_regs[OPERAND_1]] = prog_mem[data_regs[REG_VAL_1]];
+            reg_file[SP] = data_regs[REG_VAL_1] + 1;
             break;
         case(CALL):
-            reg_file[SP] -= 4;
-            *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]) = data_regs[REG_VAL_1];
+            reg_file[SP] = data_regs[REG_VAL_1] - 4;
+            *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_1] - 4) = data_regs[REG_VAL_2];
             reg_file[PC] = cntrl_regs[IMMEDIATE];
             break;
         case(RET):
-            reg_file[PC] = *reinterpret_cast<unsigned int*>(prog_mem + reg_file[SP]);
-            reg_file[SP] += 4;
+            reg_file[PC] = *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_1]);
+            reg_file[SP] = data_regs[REG_VAL_1] + 4;
             break;
         default:
             // invalid instruction
