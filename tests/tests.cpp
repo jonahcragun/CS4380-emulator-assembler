@@ -2052,6 +2052,21 @@ TEST(TRP5, execute) {
     EXPECT_EQ(output, "hi there");
 
     // test reaching outside memory (fail)
+    int ms = DEFAULT_MEM_SIZE - 10;
+    prog_mem[ms - 10] = 10;
+    prog_mem[ms - 9] = 'h';
+    prog_mem[ms - 8] = 'i';
+    prog_mem[ms - 7] = ' ';
+    prog_mem[ms - 6] = 't';
+    prog_mem[ms - 5] = 'h';
+    prog_mem[ms - 4] = 'e';
+    prog_mem[ms - 3] = 'r';
+    prog_mem[ms - 2] = 'e';
+    prog_mem[ms - 1] = 0;
+    prog_mem[ms - 0] = 'u';
+    data_regs[REG_VAL_1] = ms;
+    ret = execute();
+    EXPECT_EQ(ret, false);
 
     delete_mem();
 
@@ -2072,7 +2087,56 @@ TEST(TRP6, decode) {
 
 TEST(TRP6, execute) {
     init_mem(DEFAULT_MEM_SIZE);
+    cntrl_regs[OPERATION] = TRP;
+    cntrl_regs[IMMEDIATE] = RSTR;
+    data_regs[REG_VAL_1] = 1000;
+    bool ret = false;
 
+    // // Create pipe to mock stdin
+
+    // int fildes[2];
+
+    // int status = pipe(fildes);
+
+    // ASSERT_NE(status, -1) << "Problem setting up stdin for input TRP tests";
+
+
+
+    // // Swap `stdin` fd with the "read" end of the pipe
+
+    // status = dup2(fildes[0], STDIN_FILENO);
+
+    // ASSERT_NE(status, -1) << "Problem setting up stdin for input TRP tests";
+
+
+
+    // // Create valid integer payload
+
+    // char buf[] = "hi there\n";
+
+    // int bsize  = strlen(buf);
+
+
+
+    // // Send payload through pipe
+
+    // ssize_t nbytes = write(fildes[1], buf, bsize);
+    
+    std::cout << std::flush;
+    ret = execute();
+
+    // test correct string 
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(prog_mem[1000], 10);
+    EXPECT_EQ(prog_mem[1001], 'h');
+    EXPECT_EQ(prog_mem[1002], 'i');
+    EXPECT_EQ(prog_mem[1003], ' ');
+    EXPECT_EQ(prog_mem[1004], 't');
+    EXPECT_EQ(prog_mem[1005], 'h');
+    EXPECT_EQ(prog_mem[1006], 'e');
+    EXPECT_EQ(prog_mem[1007], 'r');
+    EXPECT_EQ(prog_mem[1008], 'e');
+    EXPECT_EQ(prog_mem[1009], 0);
 
     delete_mem();
 

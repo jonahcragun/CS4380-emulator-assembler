@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
         bool dret = decode();
         bool eret = execute();
 
-        if (!fret || !dret || !eret || reg_file[SP] < reg_file[SL] || reg_file[SP] >= reg_file[SB]) break;
+        if (!fret || !dret || !eret || reg_file[SP] < reg_file[SL] || reg_file[SP] > reg_file[SB]) break;
     }
     
     delete_mem();

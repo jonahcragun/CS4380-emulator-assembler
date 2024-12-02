@@ -524,6 +524,12 @@ class Assembler:
             R13 = 13
             R14 = 14
             R15 = 15
+            PC = 16
+            SL = 17
+            SB = 18
+            SP = 19
+            FP = 20
+            HP = 21
         
         # loop to read chars from self.file
         self.file += "\n"

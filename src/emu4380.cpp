@@ -466,6 +466,7 @@ bool execute() {
                     cin >> *reinterpret_cast<unsigned char*>(reg_file + R3);
                     break;
                 case(WSTR):
+                    if (data_regs[REG_VAL_1] + prog_mem[data_regs[REG_VAL_1]] >= mem_size) return false;
                     for (int i = 1; i < prog_mem[data_regs[REG_VAL_1]] + 1; ++i) {
                         if (prog_mem[data_regs[REG_VAL_1] + i] == 0) break;
                         cout << prog_mem[data_regs[REG_VAL_1] + i];
@@ -473,7 +474,7 @@ bool execute() {
                     break;
                 case(RSTR): {
                     string str;
-                    cin >> str;
+                    std::getline(cin, str);
                     prog_mem[data_regs[REG_VAL_1]] = str.size();
                     for (int i = 0; i < str.size(); ++i) {
                         prog_mem[data_regs[REG_VAL_1] + i + 1] = str[i];
