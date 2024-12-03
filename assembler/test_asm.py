@@ -186,10 +186,17 @@ def test_invalid_instr():
 # test new instructions (from part 3)
 def test_JMR():
     asm = Assembler()
-    asm.file = " JmR r1 ; jmp to value in r1\n"
+    asm.file = " JmR hp ; jmp to value in r1\n"
     ret = asm.parse_instr()
     assert ret == 0;
-    assert asm.mem == [0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0]
+    assert asm.mem == [0, 0, 0, 0, 2, 21, 0, 0, 0, 0, 0, 0]
+
+    asm.file = " JmR r1\n trp #0"
+    asm.mem = [0, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 0]
+
 
     # error handling
     asm.file = " JmR 2"
