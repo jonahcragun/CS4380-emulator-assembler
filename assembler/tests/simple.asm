@@ -33,5 +33,6 @@ MAIN ldr 	r0, Everything 		;42 into r0
 	trp 	#3 			;print '!' to stdout
 	movi 	r3, #10 		;newline into r3
 	trp 	#3 			;newline to stdout
-	trp 	#0 			;end program
+    muli    r6, r7,  #1024   ; multiply r7 with imm, store in r6
+    trp 	#0 			;end program
 
