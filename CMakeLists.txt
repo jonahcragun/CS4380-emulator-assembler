@@ -15,14 +15,14 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(
     emu4380
-    src/main.cpp src/emu4380.cpp include/emu4380.h src/cache.cpp include/cache.h
+    src/main.cpp src/emu4380.cpp include/emu4380.h
 )
 
 enable_testing()
 
 add_executable(
   runTests
-  tests/tests.cpp include/emu4380.h src/emu4380.cpp src/cache.cpp include/cache.h
+  tests/tests.cpp include/emu4380.h src/emu4380.cpp
 )
 target_link_libraries(
   runTests

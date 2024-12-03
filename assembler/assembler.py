@@ -341,16 +341,10 @@ class Assembler:
             EXIT = 31
             MOVI_OP2_CHAR_DONE = 32
             MOVI_OP2_CHAR = 33
-            JMR = 34
 
         # enum for instrunctions
         class Instr(Enum):
             JMP = 1
-            JMR = 2
-            BNZ = 3
-            BGT = 4
-            BLT = 5
-            BRZ = 6
             MOV = 7
             MOVI = 8
             LDA = 9
@@ -358,10 +352,6 @@ class Assembler:
             LDR = 11
             STB = 12
             LDB = 13
-            ISTR = 14
-            ILDR = 15
-            ISTB = 16
-            ILDB = 17
             ADD = 18
             ADDI = 19
             SUB = 20
@@ -371,8 +361,6 @@ class Assembler:
             DIV = 24
             SDIV = 25
             DIVI = 26
-            CMP = 29
-            CMPI = 30
             TRP = 31
 
         class Regs(Enum):
@@ -502,23 +490,9 @@ class Assembler:
                         elif operator == Instr.TRP.name and c == '#':
                             s = State.TRP
                             operand = ""
-                        elif operator == Instr.JMR.name and c.upper() == 'R':
-                            print(c, self.file)
-                            s = State.JMR
                         else:
                             s = State.ERROR
                         operator = ""
-                    else:
-                        s = State.ERROR
-
-                case State.JMR:
-                    if re.match(r'[\d]', c):
-                        s = State.JMR
-                        operand += c
-                    elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
-                        s = State.ENDL
-                        self.mem.extend([Regs[operand].value, 0, 0, 0, 0, 0, 0])
-                        operand = ""
                     else:
                         s = State.ERROR
     
@@ -783,6 +757,8 @@ class Assembler:
 
     # print error message and exit program with proper return value
     def handle_error(self, ret: int) -> None:
+        print(self.mem)
+        print(self.labels)
         if ret == 1:
             print(f'USAGE: python3 asm4380.py inputFile.asm')
             exit(ret)
