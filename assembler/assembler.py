@@ -489,15 +489,15 @@ class Assembler:
     
                         if operator == Instr.JMP.name and re.match(r'[a-zA-Z\d]', c):
                             s = State.JMP
-                        elif operator == Instr.MOV.name:
+                        elif operator in [Instr.MOV.name, Instr.ISTR.name, Instr.ILDR.name, Instr.ISTB.name, Instr.ILDB.name]:
                             s = State.MOV
                         elif operator == Instr.MOVI.name:
                             s = State.MOVI
-                        elif operator in [Instr.LDA.name, Instr.STR.name, Instr.LDR.name, Instr.STB.name, Instr.LDB.name]:
+                        elif operator in [Instr.LDA.name, Instr.STR.name, Instr.LDR.name, Instr.STB.name, Instr.LDB.name, Instr.BNZ.name, Instr.BGT.name, Instr.BLT.name, Instr.BRZ.name ]:
                             s = State.LD_ST
-                        elif operator in [Instr.ADD.name, Instr.SUB.name, Instr.MUL.name, Instr.DIV.name, Instr.SDIV.name]:
+                        elif operator in [Instr.ADD.name, Instr.SUB.name, Instr.MUL.name, Instr.DIV.name, Instr.SDIV.name, Instr.CMP.name]:
                             s = State.ARITHMETIC
-                        elif operator in [Instr.ADDI.name, Instr.SUBI.name, Instr.MULI.name, Instr.DIVI.name]:
+                        elif operator in [Instr.ADDI.name, Instr.SUBI.name, Instr.MULI.name, Instr.DIVI.name, Instr.CMPI.name]:
                             s = State.ARITHMETIC_IMM
                         elif operator == Instr.TRP.name and c == '#':
                             s = State.TRP
@@ -512,9 +512,9 @@ class Assembler:
                         s = State.ERROR
 
                 case State.JMR:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.JMR
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
                         s = State.ENDL
                         self.mem.extend([Regs[operand].value, 0, 0, 0, 0, 0, 0])
