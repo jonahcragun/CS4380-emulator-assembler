@@ -4,7 +4,7 @@ import pytest
 # test file is read correctly
 def test_read_file():
     asm = Assembler()
-    ret = asm.read_file("tests/test.txt")
+    ret = asm.read_file("test/test.txt")
     assert ret == 1
 
     ret = asm.read_file("tests/test.asm")
@@ -78,6 +78,110 @@ def test_second_pass():
     assert asm.mem == [12, 1, 0, 0, 0, 1, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0]
     assert ret == 0
 
+# **************************************************
+# Tests added for resubmission
+# **************************************************
+
+def test_parse_more_instr():
+    asm = Assembler()
+    asm.file = " jmp MAIN\nMAIN movi r0, #1    \n add sP, r3, r4\n addi Hp, SP, #5\n muli R6, R7, #-2\nHELLO div r6, r7, r8"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 0
+
+    asm.file = " jmp MAIN\nMAIN muli r6, r7, #10101000000000000000001010123232001"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 0
+
+    asm.file = " jmp MAIN\nMAIN muli r6, r7, #-10000\n      add hp, sp, sL\n movi R15, #-1\n    divi hp, sp, #-2" 
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    print(asm.mem)
+    assert ret == 0
+    assert asm.mem == [4, 0, 0, 0, 1, 0, 0, 0, 'MAIN', 0, 0, 0, 23, 6, 7, 0, 240, 216, 255, 255, 18, 21, 19, 17, 0, 0, 0, 0, 8, 15, 0, 0, 255, 255, 255, 255, 26, 21, 19, 0, 254, 255, 255, 255]
+
+def test_invalid_instr():
+    asm = Assembler()
+    asm.file = " jmp MAIN\nMAIN mov r0, r1 \n LTR r0, LEFT"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+
+    asm.file = " jmp MAIN\nMAIN mov r0, r1 \n LDR r0, LEFT \n"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert asm.mem == [4, 0, 0, 0, 1, 0, 0, 0, 'MAIN', 0, 0, 0, 7, 0, 1, 0, 0, 0, 0, 0, 11, 0, 0, 0, 'LEFT', 0, 0, 0]
+    assert ret == 0
+
+
+    asm.file = " jmp MAIN\nMAIN mov r0, r1 \n LDR r0, LEFT\n mulli r0, r15, #12 \n"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+    # test mov invalid param 1
+    asm.file = " mov HS, r1"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+    # test mov invalid param 2
+    asm.file = " mov r1, HS"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+    # test movi invalid param 1
+    asm.file = " movi HS, #1"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+    # test str invalid param 1
+    asm.file = " str HS, Label"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+    # test mul invalid param 1
+    asm.file = " mul HS, r1, HP"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+    # test mul invalid param 2
+    asm.file = " mul r1, HS, r2"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+    # test mul invalid param 3
+    asm.file = " mul r1, r2, HS"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+    # test muli invalid param 1
+    asm.file = " muli HS, r0, r1"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+    # test muli invalid param 2
+    asm.file = " muli r0, r1, HS"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+
+    # test muli invalid param 3
+    asm.file = " muli r1, r2, HS"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 2
+    
+    
 
 # test new instructions (from part 3)
 def test_JMR():

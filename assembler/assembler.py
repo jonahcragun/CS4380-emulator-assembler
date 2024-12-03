@@ -603,8 +603,11 @@ class Assembler:
                         s = State.OPERATOR
                         operator += c.upper()
                     elif re.match(r'[ \t]', c):
-                        s = State.OPERATOR_DONE
-                        self.mem.append(Instr[operator].value)
+                        if operator in [n.name for n in Instr]:
+                            s = State.OPERATOR_DONE
+                            self.mem.append(Instr[operator].value)
+                        else:
+                            s = State.ERROR
                     else:
                         s = State.ERROR
                 case State.OPERATOR_DONE:
@@ -618,15 +621,15 @@ class Assembler:
     
                         if operator in [Instr.JMP.name, Instr.CALL.name] and re.match(r'[a-zA-Z\d]', c):
                             s = State.JMP
-                        elif operator in [Instr.MOV.name, Instr.ISTR.name, Instr.ILDR.name, Instr.ISTB.name, Instr.ILDB.name, Instr.IALLC.name] and c.upper() == 'R':
+                        elif operator in [Instr.MOV.name, Instr.ISTR.name, Instr.ILDR.name, Instr.ISTB.name, Instr.ILDB.name, Instr.IALLC.name]:
                             s = State.MOV
-                        elif operator in [Instr.MOVI.name, Instr.ALCI.name] and c.upper() == 'R':
+                        elif operator in [Instr.MOVI.name, Instr.ALCI.name]:
                             s = State.MOVI
-                        elif operator in [Instr.LDA.name, Instr.STR.name, Instr.LDR.name, Instr.STB.name, Instr.LDB.name, Instr.BNZ.name, Instr.BGT.name, Instr.BLT.name, Instr.BRZ.name, Instr.ALLC.name] and c.upper() == 'R':
+                        elif operator in [Instr.LDA.name, Instr.STR.name, Instr.LDR.name, Instr.STB.name, Instr.LDB.name, Instr.BNZ.name, Instr.BGT.name, Instr.BLT.name, Instr.BRZ.name, Instr.ALLC.name]:
                             s = State.LD_ST
-                        elif operator in [Instr.ADD.name, Instr.SUB.name, Instr.MUL.name, Instr.DIV.name, Instr.SDIV.name, Instr.CMP.name, Instr.AND.name, Instr.OR.name] and c.upper() == 'R':
+                        elif operator in [Instr.ADD.name, Instr.SUB.name, Instr.MUL.name, Instr.DIV.name, Instr.SDIV.name, Instr.CMP.name, Instr.AND.name, Instr.OR.name]:
                             s = State.ARITHMETIC
-                        elif operator in [Instr.ADDI.name, Instr.SUBI.name, Instr.MULI.name, Instr.DIVI.name, Instr.CMPI.name] and c.upper() == 'R':
+                        elif operator in [Instr.ADDI.name, Instr.SUBI.name, Instr.MULI.name, Instr.DIVI.name, Instr.CMPI.name]:
                             s = State.ARITHMETIC_IMM
                         elif operator == Instr.TRP.name and c == '#':
                             s = State.TRP
@@ -644,9 +647,9 @@ class Assembler:
                         s = State.ERROR
 
                 case State.JMR:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.JMR
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
                         s = State.ENDL
                         self.mem.extend([Regs[operand].value, 0, 0, 0, 0, 0, 0])
@@ -655,9 +658,9 @@ class Assembler:
                         s = State.ERROR
     
                 case State.MOVI:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.MOVI
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.MOVI_DONE
                         self.mem.append(Regs[operand].value)
@@ -683,7 +686,7 @@ class Assembler:
                         operand = ""
 
                 case State.MOVI_OP2:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\d-]', c):
                         s = State.MOVI_OP2
                         operand += c
                     elif re.match(r'[ \t\n]', c):
@@ -697,9 +700,9 @@ class Assembler:
                     else:
                         s = State.ERROR
                 case State.MOV:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.MOV
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.MOV_DONE
                         self.mem.append(Regs[operand].value)
@@ -709,15 +712,13 @@ class Assembler:
                 case State.MOV_DONE:
                     if re.match(r'[ \t]', c):
                         s = State.MOV_DONE
-                    elif c.upper() == 'R':
+                    else:
                         s = State.MOV_OP2
                         operand += c.upper()
-                    else:
-                        s = State.ERROR
                 case State.MOV_OP2:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.MOV_OP2
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
                         if c == '\n':
                             s = State.START_LINE
@@ -742,9 +743,9 @@ class Assembler:
                     else:
                         s = State.ERROR
                 case State.LD_ST:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.LD_ST
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.LD_ST_DONE
                         self.mem.append(Regs[operand].value)
@@ -774,9 +775,9 @@ class Assembler:
                     else:
                         s = State.ERROR
                 case State.ARITHMETIC:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.ARITHMETIC
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.ARITHMETIC_DONE
                         self.mem.append(Regs[operand].value)
@@ -786,15 +787,15 @@ class Assembler:
                 case State.ARITHMETIC_DONE:
                     if re.match(r'[ \t]', c):
                         s = State.ARITHMETIC_DONE
-                    elif c.upper()  == 'R':
+                    elif re.match(r'[\w]', c):
                         s = State.ARITHMETIC_OP2
                         operand += c.upper()
                     else:
                         s = State.ERROR
                 case State.ARITHMETIC_OP2:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.ARITHMETIC_OP2
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.ARITHMETIC_OP2_DONE
                         self.mem.append(Regs[operand].value)
@@ -804,15 +805,13 @@ class Assembler:
                 case State.ARITHMETIC_OP2_DONE:
                     if re.match(r'[ \t]', c):
                         s = State.ARITHMETIC_OP2_DONE
-                    elif c.upper() == 'R':
+                    else:
                         s = State.ARITHMETIC_OP3
                         operand += c.upper()
-                    else:
-                        s = State.ERROR
                 case State.ARITHMETIC_OP3:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.ARITHMETIC_OP3
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
                         if c == '\n':
                             s = State.START_LINE
@@ -823,9 +822,9 @@ class Assembler:
                     else:
                         s = State.ERROR
                 case State.ARITHMETIC_IMM:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.ARITHMETIC_IMM
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.ARITHMETIC_IMM_DONE
                         self.mem.append(Regs[operand].value)
@@ -835,15 +834,13 @@ class Assembler:
                 case State.ARITHMETIC_IMM_DONE:
                     if re.match(r'[ \t]', c):
                         s = State.ARITHMETIC_IMM_DONE
-                    elif c.upper() == 'R':
+                    else:
                         s = State.ARITHMETIC_IMM_OP2
                         operand += c.upper()
-                    else:
-                        s = State.ERROR
                 case State.ARITHMETIC_IMM_OP2:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\w]', c):
                         s = State.ARITHMETIC_IMM_OP2
-                        operand += c
+                        operand += c.upper()
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.ARITHMETIC_IMM_OP2_DONE
                         self.mem.append(Regs[operand].value)
@@ -858,7 +855,7 @@ class Assembler:
                     else:
                         s = State.ERROR
                 case State.ARITHMETIC_IMM_OP3:
-                    if re.match(r'[\d]', c):
+                    if re.match(r'[\d-]', c):
                         operand += c
                     elif re.match(r'[ \t\n]', c):
                         if c == '\n':
