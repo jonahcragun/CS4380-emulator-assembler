@@ -615,7 +615,7 @@ class Assembler:
                     if re.match(r'[ \t]', c):
                         s = State.OPERATOR_DONE
                     elif re.match(r'[#a-zA-Z\d]', c):
-                        if operator == Instr.JMP.name:
+                        if operator in [Instr.JMP.name, Instr.CALL.name]:
                             operand += c
                         else:
                             operand += c.upper()
