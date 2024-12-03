@@ -90,6 +90,9 @@ int main(int argc, char* argv[]) {
         return file_read;
     }
 
+    // init stack regs
+    init_stack(argv[FILE_POS]);
+
     // initialize pc
     reg_file[PC] = *reinterpret_cast<unsigned int*>(prog_mem);
 
@@ -99,7 +102,7 @@ int main(int argc, char* argv[]) {
         bool dret = decode();
         bool eret = execute();
 
-        if (!fret || !dret || !eret) break;
+        if (!fret || !dret || !eret || reg_file[SP] < reg_file[SL] || reg_file[SP] > reg_file[SB]) break;
     }
     
     delete_mem();

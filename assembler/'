@@ -196,12 +196,14 @@ class Assembler:
                     states[s] = False
                     if re.match(r'[ \t]', c):
                         states["str2"] = True
-                    elif c == '#':
-                        states["alloc_str_num"] = True
                     elif c == '"':
-                        states["get_str_chars"] = True
+                        state["alloc_str"] = True
+                    elif c == '#':
+                        state["alloc_str_num"] = True
+                    elif c == '"':
+                        states["get_bts_chars"] = True
                     else:
-                        states["error"] = True
+                        state["error"] = True
                 # allocate specified number of bytes for a string
                 case "alloc_str_num":
                     states[s] = False
@@ -234,7 +236,7 @@ class Assembler:
                         value += c
                         states[s] = True
                     else:
-                        states["alloc_str"] = True
+                        states["alloc_bts"] = True
                 # read str value as chars from self.file, convert to ints, store in self.mem
                 case "alloc_str":
                     states[s] = False
@@ -253,7 +255,7 @@ class Assembler:
                     elif c.lower() == 't':
                         states["bts1"] = True
                     else:
-                        states["error"] = True
+                        states["error"] == True
                 # reading chars for byt directive
                 case "byt1":
                     states[s] = False
@@ -278,7 +280,7 @@ class Assembler:
                     if c.lower() == 's':
                         states["bts2"] = True
                     else:
-                        states["error"] = True
+                        state["error"] = True
                 # reading chars for bts dirctive
                 case "bts2":
                     states[s] = False
@@ -287,7 +289,7 @@ class Assembler:
                     elif c == '#':
                         states["alloc_bts"] = True
                     else:
-                        states["error"] = True
+                        state["error"] = True
                 # allocate specified number of bytes
                 case "alloc_bts":
                     states[s] = False
@@ -295,7 +297,7 @@ class Assembler:
                         states[s] = True
                         value += c
                     elif re.match(r'[\s;]', c):
-                        # Add 25 bytes to memory initialized to 0
+                        # add 4 byte value to self.mem
                         if int(value) > self.MAX_INT or int(value) < self.MIN_INT:
                             states["error"] = True
                             continue
@@ -524,12 +526,6 @@ class Assembler:
             R13 = 13
             R14 = 14
             R15 = 15
-            PC = 16
-            SL = 17
-            SB = 18
-            SP = 19
-            FP = 20
-            HP = 21
         
         # loop to read chars from self.file
         self.file += "\n"
@@ -603,11 +599,8 @@ class Assembler:
                         s = State.OPERATOR
                         operator += c.upper()
                     elif re.match(r'[ \t]', c):
-                        if operator in [n.name for n in Instr]:
-                            s = State.OPERATOR_DONE
-                            self.mem.append(Instr[operator].value)
-                        else:
-                            s = State.ERROR
+                        s = State.OPERATOR_DONE
+                        self.mem.append(Instr[operator].value)
                     else:
                         s = State.ERROR
                 case State.OPERATOR_DONE:
@@ -621,15 +614,15 @@ class Assembler:
     
                         if operator in [Instr.JMP.name, Instr.CALL.name] and re.match(r'[a-zA-Z\d]', c):
                             s = State.JMP
-                        elif operator in [Instr.MOV.name, Instr.ISTR.name, Instr.ILDR.name, Instr.ISTB.name, Instr.ILDB.name, Instr.IALLC.name]:
+                        elif operator in [Instr.MOV.name, Instr.ISTR.name, Instr.ILDR.name, Instr.ISTB.name, Instr.ILDB.name, Instr.IALLC.name] and c.upper() == 'R':
                             s = State.MOV
-                        elif operator in [Instr.MOVI.name, Instr.ALCI.name]:
+                        elif operator in [Instr.MOVI.name, Instr.ALCI.name] and c.upper() == 'R':
                             s = State.MOVI
-                        elif operator in [Instr.LDA.name, Instr.STR.name, Instr.LDR.name, Instr.STB.name, Instr.LDB.name, Instr.BNZ.name, Instr.BGT.name, Instr.BLT.name, Instr.BRZ.name, Instr.ALLC.name]:
+                        elif operator in [Instr.LDA.name, Instr.STR.name, Instr.LDR.name, Instr.STB.name, Instr.LDB.name, Instr.BNZ.name, Instr.BGT.name, Instr.BLT.name, Instr.BRZ.name, Instr.ALLC.name] and c.upper() == 'R':
                             s = State.LD_ST
-                        elif operator in [Instr.ADD.name, Instr.SUB.name, Instr.MUL.name, Instr.DIV.name, Instr.SDIV.name, Instr.CMP.name, Instr.AND.name, Instr.OR.name]:
+                        elif operator in [Instr.ADD.name, Instr.SUB.name, Instr.MUL.name, Instr.DIV.name, Instr.SDIV.name, Instr.CMP.name, Instr.AND.name, Instr.OR.name] and c.upper() == 'R':
                             s = State.ARITHMETIC
-                        elif operator in [Instr.ADDI.name, Instr.SUBI.name, Instr.MULI.name, Instr.DIVI.name, Instr.CMPI.name]:
+                        elif operator in [Instr.ADDI.name, Instr.SUBI.name, Instr.MULI.name, Instr.DIVI.name, Instr.CMPI.name] and c.upper() == 'R':
                             s = State.ARITHMETIC_IMM
                         elif operator == Instr.TRP.name and c == '#':
                             s = State.TRP
@@ -647,9 +640,9 @@ class Assembler:
                         s = State.ERROR
 
                 case State.JMR:
-                    if re.match(r'[\w]', c):
+                    if re.match(r'[\d]', c):
                         s = State.JMR
-                        operand += c.upper()
+                        operand += c
                     elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
                         s = State.ENDL
                         self.mem.extend([Regs[operand].value, 0, 0, 0, 0, 0, 0])
@@ -658,9 +651,9 @@ class Assembler:
                         s = State.ERROR
     
                 case State.MOVI:
-                    if re.match(r'[\w]', c):
+                    if re.match(r'[\d]', c):
                         s = State.MOVI
-                        operand += c.upper()
+                        operand += c
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.MOVI_DONE
                         self.mem.append(Regs[operand].value)
@@ -686,7 +679,7 @@ class Assembler:
                         operand = ""
 
                 case State.MOVI_OP2:
-                    if re.match(r'[\d-]', c):
+                    if re.match(r'[\d]', c):
                         s = State.MOVI_OP2
                         operand += c
                     elif re.match(r'[ \t\n]', c):
@@ -700,9 +693,9 @@ class Assembler:
                     else:
                         s = State.ERROR
                 case State.MOV:
-                    if re.match(r'[\w]', c):
+                    if re.match(r'[\d]', c):
                         s = State.MOV
-                        operand += c.upper()
+                        operand += c
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.MOV_DONE
                         self.mem.append(Regs[operand].value)
@@ -712,13 +705,15 @@ class Assembler:
                 case State.MOV_DONE:
                     if re.match(r'[ \t]', c):
                         s = State.MOV_DONE
+                    elif c.upper() == 'R':
+                        s = State.MOV_OP2
+                        operand += c.upper()
                     else:
-                        s = State.MOV_OP2
-                        operand += c.upper()
+                        s = State.ERROR
                 case State.MOV_OP2:
-                    if re.match(r'[\w]', c):
+                    if re.match(r'[\d]', c):
                         s = State.MOV_OP2
-                        operand += c.upper()
+                        operand += c
                     elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
                         if c == '\n':
                             s = State.START_LINE
@@ -743,9 +738,9 @@ class Assembler:
                     else:
                         s = State.ERROR
                 case State.LD_ST:
-                    if re.match(r'[\w]', c):
+                    if re.match(r'[\d]', c):
                         s = State.LD_ST
-                        operand += c.upper()
+                        operand += c
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.LD_ST_DONE
                         self.mem.append(Regs[operand].value)
@@ -775,9 +770,9 @@ class Assembler:
                     else:
                         s = State.ERROR
                 case State.ARITHMETIC:
-                    if re.match(r'[\w]', c):
+                    if re.match(r'[\d]', c):
                         s = State.ARITHMETIC
-                        operand += c.upper()
+                        operand += c
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.ARITHMETIC_DONE
                         self.mem.append(Regs[operand].value)
@@ -787,15 +782,15 @@ class Assembler:
                 case State.ARITHMETIC_DONE:
                     if re.match(r'[ \t]', c):
                         s = State.ARITHMETIC_DONE
-                    elif re.match(r'[\w]', c):
+                    elif c.upper()  == 'R':
                         s = State.ARITHMETIC_OP2
                         operand += c.upper()
                     else:
                         s = State.ERROR
                 case State.ARITHMETIC_OP2:
-                    if re.match(r'[\w]', c):
+                    if re.match(r'[\d]', c):
                         s = State.ARITHMETIC_OP2
-                        operand += c.upper()
+                        operand += c
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.ARITHMETIC_OP2_DONE
                         self.mem.append(Regs[operand].value)
@@ -805,13 +800,15 @@ class Assembler:
                 case State.ARITHMETIC_OP2_DONE:
                     if re.match(r'[ \t]', c):
                         s = State.ARITHMETIC_OP2_DONE
+                    elif c.upper() == 'R':
+                        s = State.ARITHMETIC_OP3
+                        operand += c.upper()
                     else:
-                        s = State.ARITHMETIC_OP3
-                        operand += c.upper()
+                        s = State.ERROR
                 case State.ARITHMETIC_OP3:
-                    if re.match(r'[\w]', c):
+                    if re.match(r'[\d]', c):
                         s = State.ARITHMETIC_OP3
-                        operand += c.upper()
+                        operand += c
                     elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
                         if c == '\n':
                             s = State.START_LINE
@@ -822,9 +819,9 @@ class Assembler:
                     else:
                         s = State.ERROR
                 case State.ARITHMETIC_IMM:
-                    if re.match(r'[\w]', c):
+                    if re.match(r'[\d]', c):
                         s = State.ARITHMETIC_IMM
-                        operand += c.upper()
+                        operand += c
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.ARITHMETIC_IMM_DONE
                         self.mem.append(Regs[operand].value)
@@ -834,13 +831,15 @@ class Assembler:
                 case State.ARITHMETIC_IMM_DONE:
                     if re.match(r'[ \t]', c):
                         s = State.ARITHMETIC_IMM_DONE
+                    elif c.upper() == 'R':
+                        s = State.ARITHMETIC_IMM_OP2
+                        operand += c.upper()
                     else:
-                        s = State.ARITHMETIC_IMM_OP2
-                        operand += c.upper()
+                        s = State.ERROR
                 case State.ARITHMETIC_IMM_OP2:
-                    if re.match(r'[\w]', c):
+                    if re.match(r'[\d]', c):
                         s = State.ARITHMETIC_IMM_OP2
-                        operand += c.upper()
+                        operand += c
                     elif re.match(r'[,]', c) and operand in [r.name for r in Regs]:
                         s = State.ARITHMETIC_IMM_OP2_DONE
                         self.mem.append(Regs[operand].value)
@@ -855,7 +854,7 @@ class Assembler:
                     else:
                         s = State.ERROR
                 case State.ARITHMETIC_IMM_OP3:
-                    if re.match(r'[\d-]', c):
+                    if re.match(r'[\d]', c):
                         operand += c
                     elif re.match(r'[ \t\n]', c):
                         if c == '\n':

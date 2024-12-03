@@ -35,8 +35,8 @@ enum CntrlRegNames {OPERATION=0, OPERAND_1, OPERAND_2, OPERAND_3, IMMEDIATE};
 enum DataRegNames {REG_VAL_1=0, REG_VAL_2};
 
 // instructions 
-enum Instructions {JMP=1, JMR, BNZ, BGT, BLT, BRZ, MOV=7, MOVI, LDA, STR, LDR, STB, LDB, ISTR, ILDR, ISTB, ILDB, ADD=18, ADDI, SUB, SUBI, MUL, MULI, DIV, SDIV, DIVI, CMP=29, CMPI, TRP=31};
-enum Traps {HALT=0, WINT, RINT, WCHAR, RCHAR, PREGS=98};
+enum Instructions {JMP=1, JMR, BNZ, BGT, BLT, BRZ, MOV=7, MOVI, LDA, STR, LDR, STB, LDB, ISTR, ILDR, ISTB, ILDB, ADD=18, ADDI, SUB, SUBI, MUL, MULI, DIV, SDIV, DIVI, AND, OR, CMP=29, CMPI, TRP=31, ALCI, ALLC, IALLC, PSHR, PSHB, POPR, POPB, CALL, RET};
+enum Traps {HALT=0, WINT, RINT, WCHAR, RCHAR, WSTR, RSTR, PREGS=98};
 
 // execution
 bool fetch();
@@ -46,6 +46,7 @@ bool execute();
 // initialization
 bool init_mem(unsigned int);
 unsigned int read_file(std::string);
+void init_stack(std::string);
 
 // deleteor for memory
 void delete_mem();

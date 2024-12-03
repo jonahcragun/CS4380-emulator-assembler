@@ -429,4 +429,364 @@ def test_CMPI():
     ret = asm.parse_instr()
     assert ret == 2;
 
+def test_AND():
+    asm = Assembler()
+    asm.file = " AnD r1, R2, R3 ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 27, 1, 2, 3, 0, 0, 0, 0]
 
+    # error handling
+    asm.file = " and r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " and r1, R2, #3"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " and #6, r1, r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' and r1, r2, "hi"'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+def test_OR():
+    asm = Assembler()
+    asm.file = " Or r1, R2, R3 ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 28, 1, 2, 3, 0, 0, 0, 0]
+
+    # error handling
+    asm.file = " or r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " or r1, R2, #3"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " or #6, r1, r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = ' or r1, r2, "hi"'
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+def test_ALCI():
+    asm = Assembler()
+    asm.file = " alCI r1, #3 ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 32, 1, 0, 0, 3, 0, 0, 0]
+
+    asm.file = ' alci r1, \'h\''
+    asm.mem = [4, 0, 0, 0]
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 32, 1, 0, 0, 104, 0, 0, 0]
+
+
+    # error handling
+    asm.file = " alci r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " alci r1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " alci #6,  r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+def test_ALLC():
+    asm = Assembler()
+    asm.file = " allC r1, MAIN ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    asm.labels = {'MAIN': 4}
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 33, 1, 0, 0, 'MAIN', 0, 0, 0]
+
+
+    # error handling
+    asm.file = " allc r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " allc s1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " allc #6,  r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " allc r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+def test_IALLC():
+    asm = Assembler()
+    asm.file = " IallC r1, R2 ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    asm.labels = {'MAIN': 4}
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 34, 1, 2, 0, 0, 0, 0, 0]
+
+
+    # error handling
+    asm.file = " iallc r2, HI"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " iallc s1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " iallc #6,  r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " iallc r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+def test_PSHR():
+    asm = Assembler()
+    asm.file = " PSHR r1 ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    asm.labels = {'MAIN': 4}
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 35, 1, 0, 0, 0, 0, 0, 0]
+
+
+    # error handling
+    asm.file = " PSHR r2, HI"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " PSHR s1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " PSHR #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " PSHR r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+def test_PSHB():
+    asm = Assembler()
+    asm.file = " PSHb r1 ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    asm.labels = {'MAIN': 4}
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 36, 1, 0, 0, 0, 0, 0, 0]
+
+
+    # error handling
+    asm.file = " PSHB r2, HI"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " PSHB s1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " PSHB #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " PSHB r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+
+def test_POPR():
+    asm = Assembler()
+    asm.file = " POPr r1 ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    asm.labels = {'MAIN': 4}
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 37, 1, 0, 0, 0, 0, 0, 0]
+
+
+    # error handling
+    asm.file = " POPr r2, HI"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " POPr s1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " POPr #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " POPr r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+def test_POPB():
+    asm = Assembler()
+    asm.file = " POPb r1 ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    asm.labels = {'MAIN': 4}
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 38, 1, 0, 0, 0, 0, 0, 0]
+
+
+    # error handling
+    asm.file = " POPb r2, HI"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " POPb s1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " POPb #6"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " POPb r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+def test_CALL():
+    asm = Assembler()
+    asm.file = " CaLL MAIN ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    asm.labels = {'MAIN': 4}
+    ret = asm.parse_instr()
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 39, 0, 0, 0, 'MAIN', 0, 0, 0]
+
+
+    # error handling
+    asm.file = " CaLL #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " CaLL s1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " CaLL #6, r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " CaLL r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+def test_RET():
+    asm = Assembler()
+    asm.file = " REt  ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    asm.labels = {'MAIN': 4}
+    ret = asm.parse_instr()
+    print(asm.mem)
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0]
+
+
+    # error handling
+    asm.file = " REt #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " REt s1, R2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " REt #6, r2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+    asm.file = " REt r1, #2"
+    ret = asm.parse_instr()
+    assert ret == 2;
+
+def test_TRP_5():
+    asm = Assembler()
+    asm.file = " Trp #5 ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    asm.labels = {'MAIN': 4}
+    ret = asm.parse_instr()
+    print(asm.mem)
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 31, 0, 0, 0, 5, 0, 0, 0]
+
+def test_TRP_6():
+    asm = Assembler()
+    asm.file = " Trp #6 ; and stuff"
+    asm.mem = [4, 0, 0, 0]
+    asm.labels = {'MAIN': 4}
+    ret = asm.parse_instr()
+    print(asm.mem)
+    assert ret == 0;
+    assert asm.mem == [4, 0, 0, 0, 31, 0, 0, 0, 6, 0, 0, 0]
+
+def test_BTS():
+    asm = Assembler()
+    asm.file = " .BTS #25\n .BTS #5   \t\nHELLO .Bts #3    ; trueth\n trp #0"
+    ret = asm.parse_data()
+    print(asm.mem)
+    assert ret == 0;
+    assert asm.mem == [37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    assert asm.labels == {'HELLO': 34}
+
+    # test fail
+    asm.file = " .BTS #25\n .BTS #5   \t\nHELLO .Bts #3    ; trueth\n"
+    asm.labels = {}
+    asm.mem = []
+    ret = asm.parse_data()
+    assert ret == 2;
+    
+    asm.file = " .BTS r25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .BDS #25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .BTd #25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .BTS #-25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+        
+
+def test_STR():
+    asm = Assembler()
+    asm.file = ' .STR #10\n .STR "Hello"   \t\nHELLO .str "Fred"    ; trueth\n trp #0'
+    ret = asm.parse_data()
+    print(asm.mem)
+    assert ret == 0;
+    assert asm.mem == [29, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 72, 101, 108, 108, 111, 0, 4, 70, 114, 101, 100, 0]
+    assert asm.labels == {'HELLO': 23}
+
+    # test fail
+    asm.file = " .STR #25\n .str #5   \t\nHELLO .str #3    ; trueth\n"
+    asm.labels = {}
+    asm.mem = []
+    ret = asm.parse_data()
+    assert ret == 2;
+    
+    asm.file = " .STR r25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .SDR #25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .STd #25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .STR #-25\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
+
+    asm.file = " .STR 'hello'\n trp #0"
+    asm.labels = {}
+    ret = asm.parse_data()
+    assert ret == 2;
