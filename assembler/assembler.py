@@ -551,7 +551,6 @@ class Assembler:
 
             match s:
                 case State.START_LINE:
-                    print(self.file)
                     self.cur_line += 1
                     if re.match(r'[ \t]', c):
                         s = State.START_SPACE
@@ -645,6 +644,7 @@ class Assembler:
                         s = State.ENDL
                         self.mem.extend([0, 0, 0, 0, 0, 0, 0])
                         self.file = c + self.file
+                        operator = ""
                     else:
                         s = State.ERROR
 
@@ -653,6 +653,7 @@ class Assembler:
                         s = State.JMR
                         operand += c.upper()
                     elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
+                        self.file = c + self.file
                         s = State.ENDL
                         self.mem.extend([Regs[operand].value, 0, 0, 0, 0, 0, 0])
                         operand = ""
