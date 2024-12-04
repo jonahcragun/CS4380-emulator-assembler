@@ -19,6 +19,7 @@ term .bts #4
  movi r0, #0
  movi r1, #1
 
+    brz r3, skip
 fib subi r3, r3, #1
     mov r2, r1
     add r1, r0, r1
@@ -26,7 +27,7 @@ fib subi r3, r3, #1
     bnz r3, fib 
 
  ; print results
- lda r3, result1
+skip lda r3, result1
  trp #5
  ldr r3, term
  trp #1

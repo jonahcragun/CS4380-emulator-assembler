@@ -454,7 +454,7 @@ bool execute() {
                     running = false;
                     break;
                 case(WINT):
-                    cout << data_regs[REG_VAL_1];
+                    cout << static_cast<int>(data_regs[REG_VAL_1]);
                     break;
                 case(RINT):
                     cin >> reg_file[R3];

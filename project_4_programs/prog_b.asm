@@ -59,6 +59,7 @@ mod pshr fp
     pshr r0
     pshr r1
     pshr r2
+    pshr r4
 
     ; get param 1
     mov r2, fp
@@ -69,17 +70,29 @@ mod pshr fp
     addi r2, r2, #4
     ildr r1, r2
 
+    ; determine if divisor is + or -
+    movi r4, #1
+    bgt r0, neg
+    muli r0, r0, #-1
+    movi r4, #-1
+
+neg bgt r1, mlp
+    muli r1, r1, #-1
+
     ; perform mod operation
 mlp sub r0, r0, r1
     bgt r0, mlp
+    brz r0, end
     add r0, r0, r1
+    mul r0, r0, r4
 
     ; store result on stack
-    mov r2, fp
+end mov r2, fp
     addi r2, r2, #8
     istr r0, r2
 
     ; put things back to how they were
+    popr r4
     popr r2
     popr r1
     popr r0
