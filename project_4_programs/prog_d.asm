@@ -7,6 +7,8 @@ pt3 .str "Please enter a lower bound: "
 rs1 .str "The first 20 prime numbers greater than or equal to "
 rs2 .str " are:"
 nl  .byt #10
+nums .bts #80
+val .int #0
 
     ; promt user for value
     lda r3, pt1
@@ -25,17 +27,46 @@ nl  .byt #10
     ; get user value
     trp #2
     mov r0, r3
+    str r0, val
 
     ; calculate and store prime numbers
-    pshr r0
+    movi r2, #0
+    lda r5, nums
+lp1 pshr r0
     subi sp, sp, #1
     call is_prime
     popb r1
     popr r15 ; get param off stack
 
+    ; add num to mem if prime
+    subi r4, r1, #1
+    bnz r4, elp
+    istr r0, r5
+    addi r2, r2, #1
+    addi r5, r5, #4
+
+elp addi r0, r0, #1
+    subi r4, r2, #20
+    bnz r4, lp1
+    
+
     ; print results
-    mov r3, r1 ; for testing
-    trp #1 ; for testing
+    lda r3, rs1
+    trp #5
+    ldr r3, val
+    trp #1
+    lda r3, rs2
+    trp #5
+    ldb r3, nl
+    trp #3
+    lda r5, nums
+pnt ildr r3, r5
+    trp #1
+    ldb r3, nl
+    trp #3
+    subi r2, r2, #1
+    addi r5, r5, #4
+    bnz r2, pnt
 
     ; exit program
     trp #0
@@ -50,18 +81,39 @@ is_prime pshr fp
     pshr r0
     pshr r1
     pshr r2
-    pshr r3
+    pshr r4
 
     ; get param from stack
     mov r2, fp
     addi r2, fp, #9
     ildr r0, r2
 
-    ; not prime if <= 0
-    blt r0, np
-    brz r0, np
+    ; not prime if <= 1
+    subi r1, r0, #1
+    blt r1, np
+    brz r1, np
+
+    ; prime if == 2
+    subi r1, r0, #2
+    brz r1, ip
 
     ; determine if num is prime
+    divi r2, r0, #2
+    movi r1, #2
+plp pshr r1
+    pshr r0
+    subi sp, sp, #4
+    call mod
+    popr r4
+    addi sp, sp, #8
+
+    ; check if remainder is 0
+    brz r4, np
+
+    ; get ready for next iteration
+    addi r1, r1, #1
+    sub r4, r2, r1
+    bgt r4, plp
 
     ; is prime
 ip  movi r1, #1
@@ -77,7 +129,7 @@ p_end mov r2, fp
     istb r1, r2
 
     ; put everythin back
-    popr r3
+    popr r4
     popr r2
     popr r1
     popr r0
