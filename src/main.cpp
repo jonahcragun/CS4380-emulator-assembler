@@ -97,7 +97,9 @@ int main(int argc, char* argv[]) {
     reg_file[PC] = *reinterpret_cast<unsigned int*>(prog_mem);
 
     // execution loop
+    unsigned int old_pc;
     while (running) {
+        old_pc = reg_file[PC];
         bool fret = fetch();
         bool dret = decode();
         bool eret = execute();
@@ -108,7 +110,7 @@ int main(int argc, char* argv[]) {
     delete_mem();
 
     if (running) {
-        cout << "INVALID INSTRUCTION AT: " << reg_file[PC]-8 << "\n";
+        cout << "INVALID INSTRUCTION AT: " << old_pc << "\n";
         return 1;
     }
     else {

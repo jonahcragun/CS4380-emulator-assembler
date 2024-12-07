@@ -602,10 +602,11 @@ class Assembler:
                     if re.match(r'[a-zA-Z]', c):
                         s = State.OPERATOR
                         operator += c.upper()
-                    elif re.match(r'[ \t]', c):
+                    elif re.match(r'[ \t\n]', c):
                         if operator in [n.name for n in Instr]:
                             s = State.OPERATOR_DONE
                             self.mem.append(Instr[operator].value)
+                            self.file = c + self.file
                         else:
                             s = State.ERROR
                     else:
@@ -614,7 +615,7 @@ class Assembler:
                     if re.match(r'[ \t]', c):
                         s = State.OPERATOR_DONE
                     elif re.match(r'[#a-zA-Z\d]', c):
-                        if operator == Instr.JMP.name:
+                        if operator in [Instr.JMP.name, Instr.CALL.name]:
                             operand += c
                         else:
                             operand += c.upper()
@@ -634,7 +635,7 @@ class Assembler:
                         elif operator == Instr.TRP.name and c == '#':
                             s = State.TRP
                             operand = ""
-                        elif operator in [Instr.JMR.name, Instr.PSHR.name, Instr.PSHB.name, Instr.POPR.name, Instr.POPB.name] and c.upper() == 'R':
+                        elif operator in [Instr.JMR.name, Instr.PSHR.name, Instr.PSHB.name, Instr.POPR.name, Instr.POPB.name]:
                             s = State.JMR
                         else:
                             s = State.ERROR
@@ -642,7 +643,8 @@ class Assembler:
                     elif operator == Instr.RET.name:
                         s = State.ENDL
                         self.mem.extend([0, 0, 0, 0, 0, 0, 0])
-                        self.file = ' ' + c + self.file
+                        self.file = c + self.file
+                        operator = ""
                     else:
                         s = State.ERROR
 
@@ -651,6 +653,7 @@ class Assembler:
                         s = State.JMR
                         operand += c.upper()
                     elif re.match(r'[ \t\n]', c) and operand in [r.name for r in Regs]:
+                        self.file = c + self.file
                         s = State.ENDL
                         self.mem.extend([Regs[operand].value, 0, 0, 0, 0, 0, 0])
                         operand = ""

@@ -371,8 +371,8 @@ bool decode() {
             data_regs[REG_VAL_1] = reg_file[SP]; 
             break;
         case(CALL):
-            data_regs[REG_VAL_1] = reg_file[SP];
-            data_regs[REG_VAL_2] = reg_file[PC];
+            data_regs[REG_VAL_2] = reg_file[SP];
+            data_regs[REG_VAL_1] = reg_file[PC];
             break;
         case(RET):
             data_regs[REG_VAL_1] = reg_file[SP];
@@ -454,7 +454,7 @@ bool execute() {
                     running = false;
                     break;
                 case(WINT):
-                    cout << data_regs[REG_VAL_1];
+                    cout << static_cast<int>(data_regs[REG_VAL_1]);
                     break;
                 case(RINT):
                     cin >> reg_file[R3];
@@ -583,8 +583,8 @@ bool execute() {
             reg_file[SP] = data_regs[REG_VAL_1] + 1;
             break;
         case(CALL):
-            reg_file[SP] = data_regs[REG_VAL_1] - 4;
-            *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_1] - 4) = data_regs[REG_VAL_2];
+            reg_file[SP] = data_regs[REG_VAL_2] - 4;
+            *reinterpret_cast<unsigned int*>(prog_mem + data_regs[REG_VAL_2] - 4) = data_regs[REG_VAL_1];
             reg_file[PC] = cntrl_regs[IMMEDIATE];
             break;
         case(RET):
