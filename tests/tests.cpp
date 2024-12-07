@@ -1931,16 +1931,16 @@ TEST(CALL, decode) {
 
     ret = decode();
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(data_regs[REG_VAL_1], 10);
-    EXPECT_EQ(data_regs[REG_VAL_2], 20);
+    EXPECT_EQ(data_regs[REG_VAL_2], 10);
+    EXPECT_EQ(data_regs[REG_VAL_1], 20);
 
     // test HP
     reg_file[SP] = 200;
     reg_file[PC] = 400;
     ret = decode();
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(data_regs[REG_VAL_1], 200);
-    EXPECT_EQ(data_regs[REG_VAL_2], 400);
+    EXPECT_EQ(data_regs[REG_VAL_2], 200);
+    EXPECT_EQ(data_regs[REG_VAL_1], 400);
 
     delete_mem();
 }
@@ -1949,8 +1949,8 @@ TEST(CALL, execute) {
     init_mem(DEFAULT_MEM_SIZE);
     cntrl_regs[OPERATION] = CALL;
     cntrl_regs[IMMEDIATE] = 1000;
-    data_regs[REG_VAL_2] = 500;
-    data_regs[REG_VAL_1] = DEFAULT_MEM_SIZE + 1;
+    data_regs[REG_VAL_1] = 500;
+    data_regs[REG_VAL_2] = DEFAULT_MEM_SIZE + 1;
     bool ret = false;
 
     ret = execute();
@@ -1960,8 +1960,8 @@ TEST(CALL, execute) {
     EXPECT_EQ(reg_file[PC], 1000);
 
     // test with -1
-    data_regs[REG_VAL_2] = -1;
-    data_regs[REG_VAL_1] = reg_file[SP];
+    data_regs[REG_VAL_1] = -1;
+    data_regs[REG_VAL_2] = reg_file[SP];
     ret = execute();
     EXPECT_EQ(ret, true);
     EXPECT_EQ(reg_file[SP], DEFAULT_MEM_SIZE - 7);
